@@ -12,10 +12,8 @@ import os.path
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 #paths to noddy & topology executables
-#noddyPath = os.path.join(package_directory,'../noddy/noddy')
-#topologyPath = os.path.join(package_directory,'../topology/topology')
-noddyPath = os.path.join(package_directory,'noddy/noddy')
-topologyPath = os.path.join(package_directory,'topology/topology')
+noddyPath = os.path.join(package_directory,'../noddy/noddy')
+topologyPath = os.path.join(package_directory,'../topology/topology')
 
 #global variables
 ensure_discrete_volumes = True #if True, spatially separated but otherwise identical volumes are given separate codes.
@@ -29,7 +27,7 @@ if not os.path.exists(topologyPath) and not os.path.exists(topologyPath + ".exe"
 
 # Some helper functions are defined directly here:
 def compute_model(history, output_name, **kwds):
-    import subprocess
+    import subprocess, os
     """Call Noddy and compute the history file
     
     **Arguments**:

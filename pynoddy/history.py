@@ -292,12 +292,7 @@ class NoddyHistory(object):
         for e in np.sort(self.events.keys()):
             if self.events[e].event_type == 'STRATIGRAPHY':
                 self.model_stratigraphy += self.events[e].layer_names
-            if self.events[e].event_type == 'UNCONFORMITY':
-                self.model_stratigraphy += self.events[e].layer_names
-            if self.events[e].event_type == 'DYKE': 
-                self.model_stratigraphy += self.events[e].name
-            if self.events[e].event_type == 'PLUG': 
-                self.model_stratigraphy += self.events[e].name
+            
             
     def determine_events(self, **kwds):
         """Determine events and save line numbers
@@ -855,12 +850,9 @@ Version = 7.11
         f = open(filename, 'w')
         for i,line in enumerate(history_lines):
             # add empty line before "BlockOptions", if not there:
-            if ('BlockOptions' in line) and (history_lines[i-1] != "\n"):
+            if ('BlockOptions' in line) and (self.history_lines[i-1] != "\n"):
                 f.write("\n")
-            
-            #write line
             f.write(line)
-            
         f.close()
  
  

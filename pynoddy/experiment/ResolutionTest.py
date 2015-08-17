@@ -30,6 +30,7 @@ class ResolutionTest(Experiment):
         **Arguments**:
             - *numTrials* = the number of different model resolutions to test
         **Optional Keywords**:
+            - *output* = a csv file to write the output to
             - *cleanup* = True if this function should delete any models it creates. Otherwise models of different resolutions
             are left in the same directory as the .his file they derive from. Default is True.
             - *verbose* = If true, this function sends information to the print buffer. Otherwise it runs silently. Default is True.
@@ -47,17 +48,12 @@ class ResolutionTest(Experiment):
         #import pynoddy bindings
         import pynoddy
         
-        #store null volume threshold and then set to zero
-        old_threshold = pynoddy.null_volume_threshold
-        pynoddy.null_volume_threshold=0
-        
         #place to keep topologies
-        self.topo_list = []
-        self.res_list = []
+        topo_list = []
+        res_list = []
         
-        self.nUnique = 0 #number of unique topologies
-        self.count = [] #number of differen topologies observed at each step
-        self.size = [] #number of edges (relationships) observed at each step
+        nUnique = 0 #number of unique topologies
+        count = []
         
         #run test
         step = (self.maxSize - self.minSize) / numTrials #step change between resolutions
@@ -71,7 +67,7 @@ class ResolutionTest(Experiment):
             print"Cube size: %d:" % self.get_cube_size()
            
             #store cube size
-            self.res_list.append(res)
+            res_list.append(res)
             
             #save history file
             basename = self.path + "_cube_size_%d" % res
@@ -89,7 +85,7 @@ class ResolutionTest(Experiment):
             #calculate topology
             if verbose:
                 print('Computing model topologies...')
-                print(pynoddy.compute_topology(basename))
+                print(pynoddy.compute_topology(basename,1))
                 print('Finished.\n')
             else:
                pynoddy.compute_topology(basename,1)
@@ -101,17 +97,14 @@ class ResolutionTest(Experiment):
             #topo.filter_node_volumes(self.min_node_volume)
             
             #see if this is on the list
-            if topo.is_unique(self.topo_list):
-                self.nUnique+=1 #increment unique topologies
+            if topo.is_unique(topo_list):
+                nUnique+=1 #increment unique topologies
             
             #store cumulative sequence
-            self.count.append(self.nUnique)
+            count.append(nUnique)
             
             #add to list of observed topologies
-            self.topo_list.append(topo)
-            
-            #append number of edges to edges list
-            self.size.append(topo.graph.number_of_edges())
+            topo_list.append(topo)
             
             #cleanup
             if cleanup:
@@ -120,97 +113,29 @@ class ResolutionTest(Experiment):
                 for f in glob.glob(basename+"*"):
                     os.remove(f)
             
-        print "Complete. A total of %d topologies were observed" % self.nUnique
-        print "The size of the network at each step was:"
-        print self.size
-        
+        print "Complete. A total of %d topologies were observed" % nUnique
         print "The cumulative observation sequence was:"
-        print self.count
+        print count
         
-        #restore
-        pynoddy.null_volume_threshold = old_threshold
-        
-        return self.count
-    def write_output_table( self, path ):
-        '''
-        Writes the results of this resolution test to the specified file (should be a .csv file)
-        '''
-        
-        if not os.path.exists(path):
-            os.makedirs( os.path.dirname(path) )
-            
         #write output
-        f = open(path,'w')
-        f.write("trial_resolution,cumulative_topologies,number_of_edges\n")
+        if outFile != "":
+            f = open(outFile,'w')
+            f.write("trial_resolution,cumulative_topologies\n")
+            
+            for i in range(0,len(res_list)):
+                f.write("%d,%d\n" % (res_list[i],count[i]))
+           
+            f.close()
         
-        for i in range(0,len(self.res_list)):
-            f.write("%d,%d,%d\n" % (self.res_list[i],self.count[i],self.size[i]))
-       
-        f.close()
-    def plot_unique_topologies(self,**kwds):
-        '''
-        Plots resolution vs n observed topologies using matplotlib.
-        
-        **Optional Keywords**:
-         - *path* - a path to save the figure to. If no path is provided the figure is drawn
-                    directly to the screen.
-         - *dpi* - the resolution of the saved figure. Default is 300.
-         - *width* - the width of the saved figure (in inches). Default is 5.
-         - *height* - the height of the saved figure (in inches). Default is 4.
-         
-        '''
-        import matplotlib.pyplot as plt
-        
-        width = kwds.get('width',5.)
-        height = kwds.get('height',4.)
-         
-        f, ax = plt.subplots()
-        
-        ax.plot(self.res_list,self.count)
-        
-        f.set_figwidth(width)
-        f.set_figheight(height)
-        
-        if kwds.has_key('path'):
-            f.savefig(kwds['path'],dpi=kwds.get('dpi',300))
-        else:
-            f.show()
-        
-    def plot_network_sizes(self,**kwds):
-        '''
-        Plots resolution vs network size using matplotlib.
-        
-        **Optional Keywords**:
-         - *path* - a path to save the figure to. If no path is provided the figure is drawn
-                    directly to the screen.
-         - *dpi* - the resolution of the saved figure. Default is 300.
-         - *width* - the width of the saved figure (in inches). Default is 5.
-         - *height* - the height of the saved figure (in inches). Default is 4.
-         
-        '''
-        import matplotlib.pyplot as plt
-        width = kwds.get('width',5.)
-        height = kwds.get('height',4.)
-         
-        f, ax = plt.subplots()
-        
-        ax.plot(self.res_list,self.size)
-        
-        f.set_figwidth(width)
-        f.set_figheight(height)
-        
-        if kwds.has_key('path'):
-            f.savefig(kwds['path'],dpi=kwds.get('dpi',300))
-        else:
-            f.show()
+        return count
         
 #some debug stuff...
 if __name__ == '__main__':
     import sys,os
-    os.chdir(r'C:\Users\Sam\OneDrive\Documents\Masters\Models\Primitive\resolution_test')
+    os.chdir(r'C:\Users\Sam\SkyDrive\Documents\Masters\Models\Primitive\resolution_test')
     
     #load pynoddy
-    sys.path.append(r"C:\Users\Sam\OneDrive\Documents\Masters\pynoddy")
+    sys.path.append(r"C:\Users\Sam\SkyDrive\Documents\Masters\pynoddy")
     import pynoddy
     
     #setup
@@ -218,11 +143,9 @@ if __name__ == '__main__':
     
     #build resolution test
     #res = ResolutionTest('folducdykefault_stretched.his',50,550)
-    res = ResolutionTest('folducdykefault_stretched.his',50,550)
-    #res = ResolutionTest('foldUC.his',200,250)
+    #res = ResolutionTest('normal_fault.his',50,550)
+    res = ResolutionTest('foldUC.his',200,250)
     #run
-    res.test_resolution(100,cleanup=True)
-    #plot
-    res.plot_network_sizes()
-    res.plot_unique_topologies()
     
+    
+    res.test_resolution(5,output='foldUC_cumulative_dv1_test.csv')

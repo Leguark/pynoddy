@@ -6,8 +6,6 @@ Created on 24/03/2014
 import os
 import numpy as np
 
-import pynoddy
-
 class NoddyOutput(object):
     """Class definition for Noddy output analysis"""
     
@@ -129,22 +127,7 @@ class NoddyOutput(object):
         (self.delx, self.dely, self.delz) = (self.extent_x / float(self.nx), 
                                              self.extent_y / float(self.ny),
                                              self.extent_z / float(self.nz))
-        #load lihtology colours
-        if os.path.exists(self.basename + ".g20"):
-            filelines = open(self.basename + ".g20").readlines()
-            self.n_events = int(filelines[0].split(' ')[2]) #number of events
-            lithos = filelines[ 3 + self.n_events : len(filelines) - 1] #litho definitions
-            
-            self.rock_names = []
-            self.rock_colors = []
-            self.rock_ages = []
-            
-            for l in lithos:
-                data = l.split(' ')
-                self.rock_ages.append(data[1])
-                self.rock_names.append(data[2])
-                self.rock_colors.append( (int(data[-3])/255., int(data[-2])/255., int(data[-1])/255.) )
-            
+    
     
     def load_geology(self):
         """Load block geology ids from .g12 output file"""
@@ -210,281 +193,6 @@ class NoddyOutput(object):
         self.unit_volumes = np.empty(np.shape(self.unit_ids))
         for i,unit_id in enumerate(self.unit_ids):
             self.unit_volumes[i] = np.sum(self.block == unit_id) * self.block_volume
-       
-    def get_surface_grid(self, lithoID, **kwds ):
-        '''
-        Returns a grid of lines that define a grid on the specified surface. Note that this cannot
-        handle layers that are repeated in the z direction...
-        
-        **Arguments**:
-         - *lithoID* - the top surface of this lithology will be calculated. If a list is passed,
-                       the top surface of each lithology in the list is calculated.
-         
-        **Keywords**:
-         - *res* - the resolution to sample at. Default is 2 (ie. every second voxel is sampled).
-         
-        **Returns**:
-         a tuple containing lists of tuples of x, y and z coordinate dictionaries and colour dictionaries, 
-         one containing the east-west lines and one the north-south lines: ((x,y,z,c),(x,y,z,c)). THe dictionary
-         keys are the lithoID's passed in the lithoID parameter.
-        '''
-        
-        import numpy.ma as ma
-        
-        cube_size = self.xmax / self.nx
-        res = kwds.get('res',2)
-        
-        if not type(lithoID) is list:
-            lithoID = [lithoID]
-            
-        sx = {}
-        sy = {}
-        sz = {}
-        sc = {}
-        
-        #get surface locations in x direction
-        for x in range(0,self.nx,res):
-            
-             #start new line
-            for i in lithoID:
-                if not sx.has_key(i): #create list
-                    sx[i] = []
-                    sy[i] = []
-                    sz[i] = []
-                    if (hasattr(self,'rock_colors')):
-                        sc[i] = self.rock_colors[i]
-                    else:
-                        sc[i] = i
-                        
-                sx[i].append([])
-                sy[i].append([])
-                sz[i].append([])
-                
-            #fill in line
-            for y in range(0,self.ny,res):
-                #drill down filling surface info
-                found = []
-                for z in range(0,self.nz-1):
-                    if (geo.block[x][y][z] != self.block[x][y][z+1])  and self.block[x][y][z] in lithoID:
-                        key = self.block[x][y][z]                          
-                        #add point
-                        sx[key][-1].append(x * cube_size)
-                        sy[key][-1].append(y * cube_size)
-                        sz[key][-1].append(z * cube_size)
-                        
-                        #remember that we've found this
-                        found.append(key)
-                #check to see if anything has been missed(and hence we should start a new line segment)
-                for i in lithoID:
-                    if not i in found:
-                        sx[i].append([]) #new list
-                        sy[i].append([])
-                        sz[i].append([])
-        #apply mask
-        #for d in [sx,sy,sz]:
-        #    for k in d.keys():
-        #        d[key] = ma.masked_where(np.array(d[key]) == -1,d[key])
-                
-        xlines = (sx,sy,sz,sc)
-        
-        sx = {}
-        sy = {}
-        sz = {}
-        sc = {}
-        
-        #get surface locations in y direction
-        for y in range(0,self.ny,res):
-            
-            #start new line
-            for i in lithoID: 
-                if not sx.has_key(i): #create list
-                    sx[i] = []
-                    sy[i] = []
-                    sz[i] = []
-                    if (hasattr(self,'rock_colors')):
-                        sc[i] = self.rock_colors[i]
-                    else:
-                        sc[i] = i
-                sx[i].append([])
-                sy[i].append([])
-                sz[i].append([])
-                
-            #fill in line
-            for x in range(0,self.nx,res):
-                #drill down filling surface info
-                found = []
-                for z in range(0,self.nz-1):
-                    if (geo.block[x][y][z] != self.block[x][y][z+1]) and self.block[x][y][z] in lithoID:
-                        key = self.block[x][y][z]                           
-                        #add point
-                        sx[key][-1].append(x * cube_size)
-                        sy[key][-1].append(y * cube_size)
-                        sz[key][-1].append(z * cube_size)
-                        found.append(key)
-                        
-                for i in lithoID:
-                    if not i in found: #line should end
-                        sx[i].append([]) #add line end
-                        sy[i].append([])
-                        sz[i].append([])
-        
-        ylines = (sx,sy,sz,sc)
-        
-        return (xlines,ylines)
-        
-    def get_section_lines(self, direction='y',position='center', **kwds):
-        """Create and returns a list of lines representing a section block through the model
-        
-        **Arguments**:
-            - *direction* = 'x', 'y', 'z' : coordinate direction of section plot (default: 'y')
-            - *position* = int or 'center' : cell position of section as integer value
-                or identifier (default: 'center')
-        **Returns**:
-        A tuple of lists of dictionaries.... ie:
-        ( [ dictionary of x coordinates, with lithology pairs as keys, separated by an underscore],
-          [ dictionary of y coordinates, with lithology pairs as keys, separated by an underscore],
-          [ dictionary of z coordinates, with lithology pairs as keys, separated by an underscore],
-          [ dictionary of colours, with lithologies as keys])
-          
-        For example: get_section_lines()[0]["1_2"] returns a list of all the x coordinates from the 
-        contact between lithology 1 and lithology 2. Note that the smaller lithology index always
-        comes first in the code.
-        """
-        
-        #calc cube size
-        cube_size = self.xmax / self.nx
-        
-        
-        x = {}
-        y = {}
-        z = {}
-        c = {}
-        
-        if 'z' in direction:
-            for i in range(0,self.nx):
-               for j in range(0,self.ny-1):
-                    
-                    if self.block[i][j][0] != self.block[i][j+1][0]: #this is a contact
-                        code = "%d_%d" % (min(self.block[i][j][0],self.block[i][j+1][0]),max(self.block[i][j][0],self.block[i][j+1][0]))
-                        if not x.has_key(code):
-                            x[code] = []
-                            y[code] = []
-                            z[code] = []
-                            
-                        x[code].append(i * cube_size)
-                        y[code].append(j * cube_size)
-                        z[code].append(-1000)
-                        
-                        if (hasattr(self,'rock_colors')):
-                            c[code] = self.rock_colors[ int(self.block[i][j][0]) - 1]
-                        else:
-                            c[code] = int(self.block[i][j][0])
-                    
-        ##xz
-        if 'y' in direction:
-            for i in range(0,self.nx):
-               for j in range(0,self.nz-1):
-                    
-                    if self.block[i][0][j] != self.block[i][0][j+1]: #this is a contact
-                        code = "%d_%d" % (min(self.block[i][0][j],self.block[i][0][j+1]),max(self.block[i][0][j],self.block[i][0][j+1]))
-                        if not x.has_key(code):
-                            x[code] = []
-                            y[code] = []
-                            z[code] = []
-                            
-                        x[code].append(i * cube_size)
-                        y[code].append(-1000)
-                        z[code].append(j * cube_size)
-                        if (hasattr(self,'rock_colors')):
-                            c[code] = self.rock_colors[ int(self.block[i][0][j]) - 1]
-                        else:
-                            c[code] = int(self.block[i][j][0])
-                    
-        #yz
-        if 'x' in direction:
-            for i in range(0,self.ny):
-               for j in range(0,self.nz-1):
-                    
-                    if self.block[0][i][j] != self.block[0][i][j+1]: #this is a contact
-                        code = "%d_%d" % (min(self.block[0][i][j],self.block[0][i][j+1]),max(self.block[0][i][j],self.block[0][i][j+1]))
-                        if not x.has_key(code):
-                            x[code] = []
-                            y[code] = []
-                            z[code] = []
-                            
-                        x[code].append(-1000)
-                        y[code].append(i * cube_size)
-                        z[code].append(j * cube_size)
-                        if (hasattr(self,'rock_colors')):
-                            c[code] = self.rock_colors[ int(self.block[0][i][j]) - 1]
-                        else:
-                            c[code] = int(self.block[i][j][0])
-                    
-        return (x,y,z,c)
-            
-    def get_section_voxels(self, direction='y',position='center', **kwds):
-        """Create and returns section block through the model
-        
-        **Arguments**:
-            - *direction* = 'x', 'y', 'z' : coordinate direction of section plot (default: 'y')
-            - *position* = int or 'center' : cell position of section as integer value
-                or identifier (default: 'center')
-              
-        **Optional Keywords**:
-            - *data* = np.array : data to plot, if different to block data itself
-            - *litho_filter* = a list of lithologies to draw. All others will be ignored.
-        """
-        
-        data = kwds.get('data',self.block)
-            
-        if direction == 'x':
-            if position == 'center':
-                cell_pos = self.nx / 2
-            else:
-                cell_pos = position
-                
-            section_slice = data[cell_pos,:,:].transpose()
-            #xlabel = "y"
-            #ylabel = "z"
-        elif direction == 'y':
-            if position == 'center':
-                cell_pos = self.ny / 2
-            else:
-                cell_pos = position
-                
-            section_slice = data[:,cell_pos,:].transpose()
-            #xlabel = "x"
-            #ylabel = "z"
-        elif direction == 'z':
-            if position == 'center':
-                cell_pos = self.nz / 2
-            else:
-                cell_pos = position
-                
-            section_slice = self.block[:,:,cell_pos].transpose()
-        else:
-            print "Error: %s is not a valid direction. Please specify either ('x','y' or 'z')." % direction
-        
-        #filter by lithology if a filter is set
-        if kwds.has_key('litho_filter'):
-            litho_filter = kwds['litho_filter']
-            if not litho_filter is None:
-                mask = []
-                for x in range(len(section_slice)):
-                    mask.append([])
-                    for y in range(len(section_slice[x])):
-                        if not int(section_slice[x][y]) in litho_filter:
-                            #section_slice[x][y] = -1 #null values
-                            mask[x].append(True)
-                        else:
-                            mask[x].append(False)
-                        
-                    
-                #apply mask
-                section_slice = np.ma.masked_array(section_slice, mask=mask)
-                #section_slice = np.ma.masked_where(mask, section_slice)
-
-        return section_slice, cell_pos
         
         
         
@@ -510,7 +218,6 @@ class NoddyOutput(object):
             - *layer_labels* = list of strings: labels for each unit in plot
             - *layers_from* = noddy history file : get labels automatically from history file
             - *data* = np.array : data to plot, if different to block data itself
-            - *litho_filter* = a list of lithologies to draw. All others will be ignored.
         """
         #try importing matplotlib
         try:
@@ -519,13 +226,11 @@ class NoddyOutput(object):
             print ("Could not draw image as matplotlib is not installed. Please install matplotlib")
             
         cbar_orientation = kwds.get("colorbar_orientation", 'vertical')
-        litho_filter = kwds.get("litho_filter",None)
-        
         # determine if data are passed - if not, then recompute model
-        #data = kwds.get('data',self.block)
+        if kwds.has_key("data"):
+            data = kwds["data"]
         ve = kwds.get("ve", 1.)
         cmap_type = kwds.get('cmap', 'YlOrRd')
-        
         if kwds.has_key('ax'):
             # append plot to existing axis
             ax = kwds['ax']
@@ -539,28 +244,44 @@ class NoddyOutput(object):
         colorbar = kwds.get("colorbar", True)
             
         # extract slice
-        #if kwds.has_key('data'):     
-        section_slice, cell_pos = self.get_section_voxels(direction,position,**kwds)
-        #else:
-        #    section_slice, cell_pos = self.get_section_voxels(direction,position,litho_filter=litho_filter)
-            
-        #calculate axis labels
-        if 'x' in direction:
-            xlabel="y"
-            ylabel="z"
-        elif 'y' in direction:
+        if direction == 'x':
+            if position == 'center':
+                cell_pos = self.nx / 2
+            else:
+                cell_pos = position
+            if kwds.has_key('data'):
+                section_slice = data[cell_pos,:,:].transpose()
+            else:
+                section_slice = self.block[cell_pos,:,:].transpose()
+            xlabel = "y"
+            ylabel = "z"
+        if direction == 'y':
+            if position == 'center':
+                cell_pos = self.ny / 2
+            else:
+                cell_pos = position
+            if kwds.has_key('data'):
+                section_slice = data[:,cell_pos,:].transpose()
+            else:
+                section_slice = self.block[:,cell_pos,:].transpose()
             xlabel = "x"
             ylabel = "z"
-        elif 'z' in direction:
+        if direction == 'z':
+            if position == 'center':
+                cell_pos = self.nz / 2
+            else:
+                cell_pos = position
+            if kwds.has_key('data'):
+                section_slice = data[:,:,cell_pos].transpose()
+            else:
+                section_slice = self.block[:,:,cell_pos].transpose()
             xlabel = "x"
             ylabel = "y"
-            
-        #plot section
+
         title = kwds.get("title", "Section in %s-direction, pos=%d" % (direction, cell_pos))
                 
         im = ax.imshow(section_slice, interpolation='nearest', aspect=ve, cmap=cmap_type, origin = 'lower left')
-       
-        if colorbar and not kwds.has_key('ax') and False: #disable - color bar is broken
+        if colorbar:
 #            cbar = plt.colorbar(im)
 #            _ = cbar
 #        
@@ -572,14 +293,14 @@ class NoddyOutput(object):
             if cbar_orientation == 'horizontal':
                 ax2 = fig.add_axes([0.125, 0.18, 0.775, 0.04])
                 cb = mpl.colorbar.ColorbarBase(ax2, cmap=cmap_type, norm=norm, spacing='proportional', 
-                                           ticks=bounds, boundaries=bounds-0.5, label='Lithology',
+                                           ticks=bounds-0.5, boundaries=bounds,
                                            orientation = 'horizontal') # , format='%s')
                 
             else: # default is vertical 
                 # create a second axes for the colorbar
                 ax2 = fig.add_axes([0.95, 0.165, 0.03, 0.69])
                 cb = mpl.colorbar.ColorbarBase(ax2, cmap=cmap_type, norm=norm, spacing='proportional', 
-                                           ticks=bounds, boundaries=bounds-0.5, label = 'Lithology',
+                                           ticks=bounds-0.5, boundaries=bounds,
                                            orientation = 'vertical') # , format='%s')
             # define the bins and normalize
     
@@ -614,10 +335,8 @@ class NoddyOutput(object):
             - *data* = np.array : data array to export to VKT (default: entire block model)
         """
         vtk_filename = kwds.get("vtk_filename", self.basename)
-        try:
-            from evtk.hl import gridToVTK
-        except:
-            from pyevtk.hl import gridToVTK
+        
+        from evtk.hl import gridToVTK
         # Coordinates
         x = np.arange(0, self.extent_x + 0.1*self.delx, self.delx, dtype='float64')
         y = np.arange(0, self.extent_y + 0.1*self.dely, self.dely, dtype='float64')
@@ -670,35 +389,25 @@ class NoddyGeophysics(object):
 
 
 class NoddyTopology(object):
-    
     """Definition to read, analyse, and visualise calculated voxel topology"""        
-    def __init__(self, noddy_model, **kwds):
+    def __init__(self, output_name, **kwds):
         """Methods to read, analyse, and visualise calculated voxel topology
         .. note:: The voxel topology have can be computed with a keyword in the
         function `compute_model`, e.g.: ``pynoddy.compute_model(history_name, output, type = 'TOPOLOGY')``
         
         **Arguments**
-         - *noddy_model* = the name of the .his file or noddy output to run topology on.
+         - *output_name* = the name of the noddy output to run topology on.
          
          **Optional Keywords**
           - *load_attributes* = True if nodes and edges in the topology network should be attributed with properties such as volume
                                and surface area and lithology colour. Default is True.
         """
-        
-        #if a .his file is passed strip extension
-        if "." in noddy_model:
-            output_name = noddy_model.split['.'][0] #remove file extension
-        else:
-            output_name = noddy_model
-            
-        #load model
         self.basename = output_name
         self.load_attributes = kwds.get("load_attributes",True)
         
         #load network
         self.loadNetwork()
         
-        self.type = "overall"
     def loadNetwork(self):
         '''
         Loads the topology network into a NetworkX datastructure
@@ -714,10 +423,6 @@ class NoddyTopology(object):
         self.graph = nx.Graph()
         self.graph.name = self.basename
 
-        #check files exist:
-        if not os.path.exists(self.basename+".g23"): #ensure topology code has been run
-            pynoddy.compute_topology(self.basename)
-        
         #load lithology properties
         self.read_properties()
                
@@ -739,40 +444,29 @@ class NoddyTopology(object):
                 
                 #calculate edge type (dyke, fault etc)
                 eCode=0
-                eAge = 0 #for original stratigraphy
                 eType = 'stratigraphic' #default is stratigraphy
-                eColour='grey' #black
-                #calculate new topology codes
-                name = self.event_names[0] #default name is first name in sequence
-                
-                
+                eColour='k' #black
                 for i in range(0,len(topoCode1) - 1): #-1 removes the trailing character
                     if (topoCode1[i] != topoCode2[i]): #find the difference
-                        #this is the 'age' of this edge
-                        eAge = i
-                        
-                        #calculate what the difference means (ie. edge type)
                         if int(topoCode2[i]) > int(topoCode1[i]):
                             eCode=topoCode2[i]
                         else:
                            eCode=topoCode1[i]
                            
-                        name = self.event_names[i] #calculate event name
-                        
                         if int(eCode) == 0: #stratigraphic contact
-                            eColour = 'grey'
+                            eColour = 'k' #black
                             eType = 'stratigraphic'
                         elif int(eCode) == 2 or int(eCode) == 7 or int(eCode) == 8: #various types of faults
                             eColour = 'r' #red
                             eType = 'fault'
                         elif int(eCode) == 3: #unconformity
-                            eColour = 'g' #green
+                            eColour = 'b' #blue
                             eType = 'unconformity'
                         elif int(eCode) == 5: #plug/dyke
-                            eColour = 'orange' #orange
+                            eColour = 'y' #yellow
                             eType = 'intrusive'
                         else:
-                            eColour = 'y' #yellow
+                            eColour = 'g' #green
                             eType = 'unknown' 
                 
                 #create nodes & associated properties
@@ -789,7 +483,7 @@ class NoddyTopology(object):
                     self.graph.node[data[1]]['volume'] = self.node_properties[ "%d_%s" % (int(lithoCode2),topoCode2) ]['volume']
                
                 #add edge
-                self.graph.add_edge(data[0],data[1],name=name,edgeCode=eCode,edgeType=eType, colour=eColour, area=count, weight=1, age=eAge)
+                self.graph.add_edge(data[0],data[1],edgeCode=eCode,edgeType=eType, colour=eColour, area=count, weight=1)
                 
     def read_properties( self ):
         
@@ -879,39 +573,24 @@ class NoddyTopology(object):
          - a new NoddyTopology object containing the collapsed graph. The original object is not modified.
         '''  
         
-        #check we can
-        if not 'overall' in self.type:
-            print "Error: structural and lithological collapsed topologies can only be calculated from the overall topology"
-            return
-            
         #make copy of this object
         import copy
         topo = copy.deepcopy(self)
-        topo.type = "structural"
         
         #retrieve list of edges, ignoring lithology
         edges = []
-        for e in topo.graph.edges(data=True):
+        for e in topo.graph.edges_iter():
+            
             code1 = e[0].split("_")[1] #topology code of node 1
             code2 = e[1].split("_")[1] #topology code of node 2
             
-            #change code1 & code2 endings 2 a (discrete volumes don't mean anything anymore)
-            code1 = code1[:-1] + 'A' #retain last letter for compatability/concistency...
-            code2 = code2[:-1] + 'A'
-            
-            #todo: merge edge attributes
-            
-            
-            #add edge tuple to edges array
-            edges.append( (code1,code2,e[2]) ) 
+            edges.append( (code1,code2) ) #add edge tuple to edges array
             
         #remake graph
         topo.graph.clear()
         
         topo.graph.add_edges_from(edges)
         
-        #remove self loops
-        topo.graph.remove_edges_from( topo.graph.selfloop_edges() )
         return topo
        
     def collapse_topology(self, verbose=False):
@@ -927,14 +606,8 @@ class NoddyTopology(object):
          - a new NoddyTopology object containing the collapsed graph. The original object is not modified.
         '''
         
-        #check we can
-        if not 'overall' in self.type:
-            print "Error: structural and lithological collapsed topologies can only be calculated from the overall topology"
-            return
-            
         import copy
         topo = copy.deepcopy(self)
-        topo.type = "stratigraphic"
         
         #clear the graph in topo
         topo.graph.clear()
@@ -944,10 +617,22 @@ class NoddyTopology(object):
             #get lithology code
             lith1 = e[0].split("_")[0] #lithology code of node1
             lith2 = e[1].split("_")[0] #lithology code of node2
+            #get topology code
+            code1 = e[0].split("_")[1] #topology code of node 1
+            code2 = e[1].split("_")[1] #topology code of node 2
             
-            #calculate new node tags (based entirely on lithology)
-            u = "%s" % (lith1)
-            v = "%s" % (lith2)
+            #calculate new topology codes
+            newCode1 = '0' #if the topology codes are the same, the code is zero (signifying a stratigraphic contact)
+            newCode2 = '0'
+            name = self.event_names[0]
+            for i in range(len(code1)-1,-1,-1):
+                if code1[i] != code2[i]: #find the first difference
+                        newCode1 = code1[i]
+                        newCode2 = code2[i]
+                        name = self.event_names[i]
+            #calculate new node tags
+            u = "%s_%s" % (lith1,newCode1)
+            v = "%s_%s" % (lith2,newCode2)
             
             if topo.graph.has_edge(u,v): #edge already exists
                 #do our best to append/merge attributes
@@ -956,16 +641,16 @@ class NoddyTopology(object):
                     try:
                         try:
                             data[key] = str(int(data[key]) + int(e[2][key])) #increment numbers
-                        except (ValueError,TypeError):
-                            try:
-                                data[key].append(e[2][key]) #try appending (for lists)
-                            except AttributeError:
-                                data[key] = [ e[2][key] ] #make list
+                        except ValueError:
+                            data[key] = e[2][key] #replace
                     except KeyError: #key not found, add new key
                         data[key] = e[2][key]
+                    
             else:
                 #create new edge
                 topo.graph.add_edge(u,v,attr_dict=e[2])
+                #set edge name
+                topo.graph.get_edge_data(u,v)['name'] = name
             if verbose:
                 print ("Collapsed (%s,%s) to (%s,%s)" % (e[0],e[1],u,v))
         
@@ -984,19 +669,18 @@ class NoddyTopology(object):
         #intersection is initially zero
         intersection=0
         
+        #add edges from this graph to union
+        union=self.graph.number_of_edges()
+        
         #ensure G2 is a graph object
         if isinstance(G2,NoddyTopology):
             G2 = G2.graph #we want the graph bit
-        
-        #add edges from this graph to union
-        union=G2.number_of_edges()
         
         for e in self.graph.edges_iter():
             if (G2.has_edge(e[0],e[1])): #edge present in both graphs
                 intersection+=1 #add this edge to intersection
             else:
                 union += 1 #edge is new, add to union
-        
         return intersection / float(union)
 
     def is_unique(self, known ):
@@ -1013,25 +697,6 @@ class NoddyTopology(object):
             if self.jaccard_coefficient(g2) == 1:
                 return False #the models match
         return True
-    
-    def find_first_match(self,known):
-        '''
-        Identical to is_unique, except that the index of the first match is returned if this matches, otherwise
-        -1 is returned.
-        **Arguments**:
-            -*known* = a list of valid NoddyTopology objects or NetworkX graphs to compare with.
-        
-        **Returns**:
-         - Returns the index of the first matching topology object, or -1
-        '''
-        index=0
-        for g2 in known:
-            if self.jaccard_coefficient(g2) == 1:
-                return index #the models match
-            index+=1
-            
-        return -1
-    
     
     @staticmethod
     def combine_topologies(topology_list):
@@ -1059,42 +724,12 @@ class NoddyTopology(object):
             #loop through edges
             for e in G.edges(data=True):
                  if (S.has_edge(e[0],e[1])): #edge already exists
-                     
-                     #average edge attributes
-                     s_e = S.edge[e[0]][e[1]]
-                     s_e['weight'] = s_e['weight'] + 1 #increment weight
-                     s_e['area'] = np.mean( [float(e[2]['area']), float(s_e['area'])] ) #average area
-                     
-                     #thought: we could also append area's instead, recording the range
-                     #of area variability on this edge!
-                     
+                     S.edge[e[0]][e[1]]['weight'] = S.edge[e[0]][e[1]]['weight'] + 1 #increment weight
                  else: #otherwise add edge
                      try:
-                         if not S.has_node(e[0]): #add node
-                             S.add_node(e[0],G.node[e[0]])
-                         else: #average attributes
-                             c1 = G.node[e[0]]['centroid']
-                             c2 = S.node[e[0]]['centroid']
-                             S.node[e[0]]['centroid'] = (np.mean([c1[0],c2[0]]),np.mean([c1[1],c2[1]]),np.mean([c1[2],c2[2]]),)
-                         
-                             S.node[e[0]]['volume'] = np.mean( [float(G.node[e[0]]['volume']),float(S.node[e[0]]['volume'])] )
-                             
-                         
-                         if not S.has_node(e[1]): #add node
-                             S.add_node(e[1],G.node[e[1]])
-                         else: #average attributes
-                             c1 = G.node[e[1]]['centroid']
-                             c2 = S.node[e[1]]['centroid']
-                             S.node[e[1]]['centroid'] = (np.mean([c1[0],c2[0]]),np.mean([c1[1],c2[1]]),np.mean([c1[2],c2[2]]),)
-                             S.node[e[1]]['volume'] = np.mean( [float(G.node[e[1]]['volume']),float(S.node[e[1]]['volume'])] )
-                         
-                     except KeyError: #some nodes don't have a centroid (litho topology)
-                         print "Warning: some attribute data could not be found for nodes %s or %s." % (e[0],e[1])
-                       
-                     #add edge
-                     e[2]['weight'] = 1
-                     S.add_edge(e[0],e[1],e[2])
-                     
+                         S.add_edge(e[0],e[1],edgeCode=e[2]['edgeCode'],edgeType=e[2]['edgeType'], colour=e[2]['colour'], weight=1)
+                     except KeyError:
+                         S.add_edge(e[0],e[1], weight=1)
         #return the graph
         return S
     
@@ -1108,44 +743,27 @@ class NoddyTopology(object):
          
         **Optional Keywords**:
          - *output* = A File or list to write cumulative observed topologies distribution. Default is None (nothing written).
-         - *ids* = A list to write the unique topology id's for each topology in the provided topology_list (in that 
-                     order). Default is None.
-         - *frequency* = A list to write frequency counts to. 
+        
         **Returns**:
          - Returns a list of unique topologies.
        '''
         
         output = kwds.get("output",None)
-        ids = kwds.get("ids",None)
-        frequency=kwds.get("frequency",None)
         
         out_list = []
+        
         uTopo = []
         for t in topology_list:
-            i=t.find_first_match(uTopo)
-            if i==-1: #this is a new topology
+            if t.is_unique(uTopo):
                 #t.filter_node_volumes(50)
                 uTopo.append(t)
-                
-                if not frequency is None:
-                    frequency.append(1) #this topology has been observed once
-                
-                if not ids is None: #store new id
-                    ids.append(len(uTopo)-1)
-                    
-            else: #this topology has been seen before
-                if not frequency is None: #increase frequency
-                    frequency[i] += 1 
-                if not ids is None: #store retrieved id
-                    ids.append(i)
-            
             
             #store cumulative output
             out_list.append(len(uTopo))
                             
         #write output file if necessary
+        import types
         if not output is None:
-            import types
             if type(output) == types.StringType: #path has been given so write file
                 
                 #check directory exists
@@ -1171,7 +789,7 @@ class NoddyTopology(object):
          
         **Returns**
           - The number of overlapping edges 
-          - A list of these edges
+          
         '''
         
         #ensure G2 is a graph object
@@ -1179,58 +797,11 @@ class NoddyTopology(object):
             G2 = G2.graph #we want the graph bit
         
         similarity=0
-        edges=[]
-        for e in self.graph.edges_iter( data = True):
+        for e in self.graph.edges_iter():
             if (G2.has_edge(e[0],e[1])):
                 similarity+=1
-                edges.append(e)
-        return similarity, edges
+        return similarity
         
-    def calculate_difference(self, G2, data=False):
-        '''
-        Calculates the difference between this NoddyTopology and another NoddyTopology or networkX graph
-        
-        **Arguments**
-         - *G2* = a valid NoddyTopology object or NetworkX graph that this topology is to be compared with
-         
-        **Returns**
-          A tuple containing:
-          - The number of different edges 
-          - a list of these edges
-        '''
-        #ensure G2 is a graph object
-        if (isinstance(G2,NoddyTopology)):
-            G2 = G2.graph #we want the graph bit
-            
-        difference=0
-        edges=[]
-        
-        #check for edges this object has but G2 does not
-        for e in self.graph.edges_iter(data=data):
-            if not G2.has_edge(e[0],e[1]) and not e in edges: #this is a difference
-                difference+=1
-                
-                #store comparator ids
-                if not data:
-                    e += ({'comp_id' : 0},) #this is from the initial topology
-                else:
-                    e[2]['comp_id'] = 0
-                    
-                edges.append(e)
-        
-        #check for any edges that G2 has but this object does not
-        for e in G2.edges_iter(data=data):
-            if not self.graph.has_edge(e[0],e[1]) and not e in edges:
-                difference+=1
-                
-                if not data:
-                    e += ({'comp_id' : 1},) #this is from the initial topology
-                else:
-                    e[2]['comp_id'] = 1
-                    
-                edges.append(e)
-                
-        return difference,edges
         
     def find_matching(self,known):
         '''
@@ -1283,239 +854,10 @@ class NoddyTopology(object):
             f.write("Edge attributes: %s" % str(self.graph.edges(data=True)))
             
             f.close()
-       
-    @staticmethod
-    def draw_graph_matrix(G,**kwds):
-        '''
-        Draws an adjacency matrix representing the specified graph object. Equivalent to
-        NoddyTopology.draw_matrix_image() but for a networkX graph object.
-        
-        **Keywords**:
-         - *path* = The path to save this image to. If not provided, the image is drawn to the screen
-         - *dpi* = The resolution to save this image. Default is 300
-         - *size* = The size of the image to save (in inches). This value will be used as the width and the height
-         
-         
-        '''
-        
-        try:
-            import matplotlib.pyplot as plt
-            import matplotlib.patches as patches
-        except ImportError:
-            print "Could not draw image as matplotlib is not installed. Please install matplotlib."
-            return
-        
-        n = G.number_of_nodes()
-        
-        #retrieve data from network
-        ids = {}
-        nodes=G.nodes()
-        
-        #build node id dictionary
-        for i in range(len(nodes)):
-            node = nodes[i]
-            ids[node] = i
-             
-        #build matrix
-        mat = [['' for i in range(n)] for j in range(n)]
-        labels = {}
-        dots=np.zeros( (n,n) )
-        
-        for e in G.edges(data=True):
-                #store colours 
-                mat[ids[e[0]]][ids[e[1]]] = e[2]['colour']
-                mat[ids[e[1]]][ids[e[0]]] = e[2]['colour']
-                
-                #label info
-                if type(e[2]['colour']) is list: #add from list
-                    for i in range( len(e[2]['colour']) ):
-                        labels[e[2]['colour'][i]] = e[2]['edgeType'][i]
-                else: #add directly
-                    labels[e[2]['colour']] = e[2]['edgeType']
-                
-                #save dots (for comparison matrices)
-                dots[ids[e[0]]][ids[e[1]]] = e[2].get('comp_id',0) == 1 #default is no dot
-                dots[ids[e[1]]][ids[e[0]]] = e[2].get('comp_id',0) == 1
-                
-        f, ax = plt.subplots()
-        for x in range(len(mat)):
-            for y in range(len(mat[0])):
-                c = mat[x][y]
-                
-                if type(c) is list: #multiple relationships...
-                    #find unique relationships, in case they are repeated (though they should not be)
-                    unique = []
-                    for i in c:
-                        if not i in unique:
-                            unique.append(i)
-                    
-                    #draw unique
-                    if len(unique) == 1:
-                        if c != '':
-                            #draw patch
-                            patch = ax.add_patch( patches.Rectangle( 
-                                            (x,y),
-                                            1,1,color=c[0],alpha=0.4))
-                            patch.set_label( labels[c[0]] )
-                            labels[c[0]] = '_nolegend_' #so we don't show labels multiple times
-                    elif len(unique) == 2: #draw two triangles
-                        #upper triangle
-                        upper = ax.add_patch( patches.Polygon(
-                                                xy=[[x,y],[x+1,y],[x,y+1]],
-                                                color=c[0],alpha=0.4))
-                        upper.set_label( labels[c[0]] )   
-                        labels[c[0]] = '_nolegend_' #so we don't show labels multiple times
-                        
-                        #lower triangle
-                        lower = ax.add_patch( patches.Polygon(
-                                                xy=[[x+1,y+1],[x+1,y],[x,y+1]],
-                                                color=c[1],alpha=0.4))
-                        upper.set_label( labels[c[1]] )   
-                        labels[c[1]] = '_nolegend_' #so we don't show labels multiple times
-                        
-                    elif len(unique) == 3: #draw two triangles with circle
-                        #upper triangle
-                        upper = ax.add_patch( patches.Polygon(
-                                                xy=[[x,y],[x+1,y],[x,y+1]],
-                                                color=c[0],alpha=0.4))
-                        upper.set_label( labels[c[0]] )   
-                        labels[c[0]] = '_nolegend_' #so we don't show labels multiple times
-                        
-                        #lower triangle
-                        lower = ax.add_patch( patches.Polygon(
-                                                xy=[[x+1,y+1],[x+1,y],[x,y+1]],
-                                                color=c[1],alpha=0.4))
-                        lower.set_label( labels[c[1]] )   
-                        labels[c[1]] = '_nolegend_' #so we don't show labels multiple times
-                        
-                        #circle
-                        circle = ax.add_patch( patches.Circle(
-                                                (x+0.5,y+0.5), 0.25,
-                                                color=c[2],alpha=1))
-                        circle.set_label( labels[c[2]] )  
-                        labels[c[2]] = '_nolegend_' #so we don't show labels multiple times
-                        
-                    elif len(unique) == 4: #draw 4 boxes
-                        #upper left
-                        patch = ax.add_patch( patches.Rectangle( 
-                                        (x,y),
-                                        .5,.5,color=c[0],alpha=0.4))
-                        patch.set_label( labels[c[0]] )
-                        labels[c[0]] = '_nolegend_' #so we don't show labels multiple times
-                        
-                        #upper right
-                        patch = ax.add_patch( patches.Rectangle( 
-                                        (x+.5,y),
-                                        .5,.5,color=c[1],alpha=0.4))
-                        patch.set_label( labels[c[1]] )
-                        labels[c[1]] = '_nolegend_' #so we don't show labels multiple times
-                        #lower left
-                        patch = ax.add_patch( patches.Rectangle( 
-                                        (x,y+.5),
-                                        .5,.5,color=c[2],alpha=0.4))
-                        patch.set_label( labels[c[2]] )
-                        labels[c[2]] = '_nolegend_' #so we don't show labels multiple times
-                        
-                        #lower right
-                        patch = ax.add_patch( patches.Rectangle( 
-                                        (x+.5,y+.5),
-                                        .5,.5,color=c[3],alpha=0.4))
-                        patch.set_label( labels[c[3]] )
-                        labels[c[3]] = '_nolegend_' #so we don't show labels multiple times
-                                        
-                        
-                    else: #uh oh - though tbh this *should* never happen.... (though Murphy would disagree)
-                        print "Error: more than 4 relationship types! This cannot be drawn on adjacency matrix"
-                        print c                        
-                        break
-                else: #only one relationship, rectangular patch
-                    if c != '':
-                        #draw patch
-                        patch = ax.add_patch( patches.Rectangle( 
-                                        (x,y),
-                                        1,1,color=c,alpha=0.4))
-                        patch.set_label( labels[c] )
-                        labels[c] = '_nolegend_' #so we don't show labels multiple times
-                        
-                #draw dots
-                if dots[x][y] == 1: #draw dot
-                    ax.scatter(x+0.5,y+0.5,c='k',alpha=0.6)
-                    print "dot %d, %d" % (x,y)
-                    
-        #plot grid
-        #ax.grid()
             
-        #plot legend
-        ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-
-        #set limits & flip y
-        ax.set_ylim(0,n)
-        ax.set_xlim(0,n)
-        ax.invert_yaxis()
-        
-        #set ticks
-        ax.set_xticks([ x + .5 for x in range(n)])
-        ax.set_yticks([ y + .5 for y in range(n)])
-        
-        ax.xaxis.set_ticklabels(G.nodes(),rotation=90)
-        ax.yaxis.set_ticklabels(G.nodes())
-        
-        #set figure size
-        size = kwds.get('size',5.)
-        f.set_figwidth(size)
-        
-        #save/show
-        if kwds.has_key('path'):
-            f.savefig(kwds['path'],dpi=kwds.get('dpi',300))
-        else:
-            f.show()
-        
-    
-    def draw_adjacency_matrix(self, **kwds):
+    def draw_matrix_image( self, outputname="" ):
         '''
-        Draws an adjacency matrix representing this topology object.
-        
-        **Keywords**:
-         - *path* = The path to save this image to. If not provided, the image is drawn to the screen
-         - *dpi* = The resolution to save this image. Default is 300
-         - *size* = The size of the image to save (in inches). This value will be used as the width and the height
-         
-        '''
-        
-        NoddyTopology.draw_graph_matrix(self.graph,kwds=kwds)
-        
-    def draw_difference_matrix(self, G2, **kwds):
-        '''
-        Draws an adjacency matrix containing the difference between this topology and the provided topology
-        
-        **Arguments**:
-         - *G2* = A different NoddyTopology or NetworkX Graph to compare to
-        
-        **Optional Keywords**:
-         - *path* = The path to save this image to. If not provided, the image is drawn to the screen
-         - *dpi* = The resolution to save this image. Default is 300
-         - *size* = The size of the image to save (in inches). This value will be used as the width and the height
-        '''
-        
-        #ensure G2 is a graph object
-        #if (isinstance(G2,NoddyTopology)):
-        #    G2 = G2.graph #we want the graph bit
-            
-        #get difference
-        n, edge_list = self.calculate_difference(G2,data=True)
-        
-        #make graph of difference
-        import networkx as nx
-        D = nx.Graph()
-        D.add_edges_from(edge_list)
-        
-        #plot
-        NoddyTopology.draw_graph_matrix(D,kwds=kwds)
-        
-    def _dep_draw_matrix_image( self, outputname="" ):
-        '''
-        Draws an (adjacency) matrix representing this NoddyTopology object. Depreciated version (just
-        loads the .g25 fil that topology opens).
+        Draws an (adjacency) matrix representing this NoddyTopology object.
         
         **Arguments**
          - *outputname* = the path of the image to be written. If left as '' the image is written to the same directory as the basename.
@@ -1549,8 +891,6 @@ class NoddyTopology(object):
         plt.imshow(rows, interpolation="nearest", vmin=1, cmap=cmap)
         plt.savefig(outputname)
         plt.clf()
-        
-        
     def draw_network_image(self, outputname="", **kwds ):
         '''
         Draws a network diagram of this NoddyTopology to the specified image
@@ -1633,11 +973,11 @@ class NoddyTopology(object):
             size = size_dict.values()
             
         else: #2D layout
-            if 'shell' in layout: #layouts: spring_layout, shell_layout, circular_layout, spectral_layout
+            if 'shell_layout' in layout: #layouts: spring_layout, shell_layout, circular_layout, spectral_layout
                 pos = nx.shell_layout(self.graph)
-            if 'circular' in layout:
+            if 'circular_layout' in layout:
                 pos = nx.circular_layout(self.graph)
-            if 'spectral' in layout:
+            if 'circular_layout' in layout:
                 pos = nx.spectral_layout(self.graph)
             else:
                 pos = nx.spring_layout(self.graph)
@@ -1654,204 +994,89 @@ class NoddyTopology(object):
         
         plt.savefig(outputname)
         plt.clf()
-    
-    def draw_network_hive( self, **kwds ):
-        '''
-        Draws a network hive plot (see https://github.com/ericmjl/hiveplot).
-        The axes of the hive are: node lithology, edge age & edge area.
-        
-        ie. the top axis lists the nodes in stratigraphic order. The second axis
-        lists edges in structural age & thrid axis lists edges by surface area.
-        
-        Nodes are joined to edge-nodes by lines on the graph if they are topologically linked
-        (ie. if an edge has that node as an end point).
-        
-         **Optional Keywords**
-         - *path* = the path to save this figure
-         - *dpi* = the resolution of the figure
-         - *bg* = the background color. Default is black.
-        '''
-        
-        #make axes
-        axes = [[],[],[]]
-        axes[0] = [(n,int(d['lithology'])) for n, d in self.graph.nodes(data=True)] #nodes
-        axes[1] = [(u,v,d['age']) for u,v,d in self.graph.edges(data=True)] #edges treated as nodes on these axes
-        axes[2] = [(u,v,d['area']) for u,v,d in self.graph.edges(data=True)]
-        
-        #calculate node positions
-        node_positions = [{},{},{}]
-        for ax in range(3): #axes
-            for n in axes[ax]: #nodes
-                node_id = n[:-1]
-                if len(node_id) == 1:
-                    node_id = n[0] #change form tuple to value
-                
-                node_positions[ax][node_id] = n[-1] #use node parameter
-          
-        #drop attributes from node ids
-        axes[0] = [ n for n, d in axes[0]]
-        axes[1] = [ (u,v) for u, v, d in axes[1]] #string contains edge type
-        axes[2] = [ (u,v) for u,v,d in axes[2]]
-          
-        #calculate edges
-        edges = {}
-        edge_vals = {}
-        for u,v,d in self.graph.edges(data=True):
-            if not edges.has_key(d['edgeType']):
-                edges[d['edgeType']] = [] #init list
-                edge_vals[d['edgeType']] = {}#'cm' : 'alpha', 'color' : d['colour']}
-                
-            e1 = (u,v) #inter group edge
-            e2 = (u,(u,v)) #between group edges
-            e3 = (v,(u,v))
-            e4 = ((u,v),(u,v))
-            
-            edges[d['edgeType']].append(e1)
-            edges[d['edgeType']].append(e2)
-            edges[d['edgeType']].append(e3)
-            edges[d['edgeType']].append(e4)
-            
-            edge_vals[d['edgeType']][e1] = d['colour'] #set edge color
-            edge_vals[d['edgeType']][e2] = d['colour'] #set edge color
-            edge_vals[d['edgeType']][e3] = d['colour'] #set edge color
-            edge_vals[d['edgeType']][e4] = d['colour'] #set edge color
-        
-        #make plot
-        from pynoddy.experiment.util.hive_plot import HivePlot
-        h = HivePlot(axes,edges,node_positions=node_positions, node_size=0.2,
-                     edge_colormap=edge_vals,lbl_axes=['Stratigraphic Age',
-                                                       'Structural Age',
-                                                       'Surface Area'],
-                                                axis_cols=['white','white','white'])
-
-        h.draw(**kwds)
-               
-        
     def draw_3d_network( self, **kwds ):
         '''
-        Draws a 3D network using matplotlib.
+        Draws a 3D network using Mayavi.
         
         **Optional Keywords**:
          - *show* = If True, the 3D network is displayed immediatly on-screen in an
                     interactive mayavi viewer. Default is True.
          - *output* = If defined an image of the network is saved to this location.
-         - *node_size* = The size of the nodes. Default is 40.
-         - *geology* = a NoddyOutput object to draw with the network
-         - *res* = resolution to draw geology at. Default is 4 (ie 1/4 of all voxels are drawn)
-         - *horizons* = a list of geology surfaces to draw. Default is nothing (none drawn). Slow!
-                        See NoddyOutput.get_surface_grid for details.
-         - *sections* = draw geology sections. Default is True.
+         - *vtk* = A path to save a .vtk model of the network (for later viewing). If
+                   undefined a vtk is not saved (default)
         '''
         
+        #import mayavi & networkx
         import networkx as nx
-        from mpl_toolkits.mplot3d import Axes3D
-        import matplotlib.pyplot as plt
         
-        node_size = kwds.get('node_size',40)
+        try:
+            from mayavi import mlab
+            import numpy as np
+        except:
+            print("Error drawing interactive network: Mayavi is not installed")
+            return
         
+        show = kwds.get("show",True)
+        outputname = kwds.get("output",'')
+        vtk = kwds.get("vtk",'')
+        
+        #convert node labels to integers
         G2 = nx.convert_node_labels_to_integers(self.graph)
         
-        #make figure
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        
-        #load geology
-        if kwds.has_key('geology'):
-            base=kwds.get('geology')
-            res=kwds.get('res',1)
-            
-            
-            if kwds.get('sections',True): #plot sections
-                
-                #get sections
-                sections = [base.get_section_lines('x',1),base.get_section_lines('y',1)]                        
-                
-                #plot sections
-                for s in sections:
-                    for k in s[0].keys():
-                        ax.plot(s[0][k],s[1][k],s[2][k],c=s[3][k],zdir='z',alpha=0.5,linewidth=3)
-                        
-            if kwds.has_key('horizons'): #plot surfaces
-                h = kwds.get('horizons')
-                surfaces = base.get_surface_grid(h) #range(0,base.n_rocktypes) #[12,14]
-                
-                #draw surfaces
-                for s in surfaces:
-                    for k in s[0].keys():
-                        for i in range(len(s[0][k])): #draw line segments
-                        #ax.scatter(sx[k],sy[k],sz[k],s=2,linewidths=(0,),zdir='z',antialiased=False)
-                        #ax.plot_trisurf(sx[k],sy[k],sz[k],color='r',alpha=0.6,antialiased=False)
-                            ax.plot(s[0][k][i],s[1][k][i],s[2][k][i],c=s[3][k],zdir='z',alpha=0.6)
-                    
         #load positions
         x = []
         y = []
         z = []
         nCols = []
         for n in G2.nodes():
-            
-            if not G2.node[n].has_key('centroid'):
-                print "Error: node centroids are not defined. Please ensure this topology object has not been collapsed"
-                return
-            
             x.append(G2.node[n]['centroid'][0])
             y.append(G2.node[n]['centroid'][1])
             z.append(G2.node[n]['centroid'][2])
             nCols.append(int(G2.node[n]['lithology']))
         
-        #make nodes
-        ax.scatter(x,y,z,zdir='z',c=nCols, s = node_size )
+        #make figure
+        mlab.figure(1, bgcolor=(1,1,1))
+        mlab.clf()
         
-        #make edges
-        for e in G2.edges(data=True):
-            start = G2.node[e[0]]['centroid']
-            end = G2.node[e[1]]['centroid']
-            
-            #todo: get edge colour
-            c = e[2]['colour']
-            #build lists
-            x = [start[0],end[0]]
-            y = [start[1],end[1]]
-            z = [start[2],end[2]]
-                       
-            #draw line
-            ax.plot(x,y,z,zdir='z',c=c)
-           
-        if kwds.has_key('output'):
-            fig.savefig(kwds.get('output'))
-        if kwds.get('show',True):
-            fig.show()
+        pts = mlab.points3d(x,y,z,nCols, scale_factor=250, scale_mode='none',resolution=20)
+    
+        pts.mlab_source.dataset.lines = np.array(G2.edges())
+        tube = mlab.pipeline.tube(pts,tube_radius=10)
+        mlab.pipeline.surface(tube,color=(0.3,0.3,0.3))
         
+        #show
+        if show:
+            mlab.show()
             
- 
+        #save
+        if outputname != '':
+            mlab.savefig(outputname)
+        
+        if vtk!='':
+            try:
+                from tvtk.api import write_data
+            except:
+                print("Warning: tvtk not installed - cannot write vtk file.")
+                return
+    
+            write_data(pts.mlab_source.dataset,outputname)
+        
 if __name__ == '__main__':
     # some testing and debugging functions...
 #     os.chdir(r'/Users/Florian/git/pynoddy/sandbox')
 #     NO = NoddyOutput("strike_slip_out")
-    os.chdir(r'C:\Users\Sam\Documents\Temporary Model Files')
-    #NO = "NFault/NFault"
-    NO = 'Fold/Fold_Fault/fold_fault'
+    os.chdir(r'C:\Users\Sam\Documents\Temporary Model Files\pynoddy\1ktest-1-100')
+    NO = "GBasin123_random_draw_0001"
     
     #create NoddyTopology
-    geo = NoddyOutput(NO)
-    topo = NoddyTopology(NO,load_attributes=True)
+    topo = NoddyTopology(NO,load_attributes=False)
     
-    #topo_c = topo.collapse_topology()
-    #print len( topo_c.graph.edges() )
-    #print len( topo.graph.edges() )
+    topo_c = topo.collapse_topology()
+    print len( topo_c.graph.edges() )
+    print len( topo.graph.edges() )
     
     #draw network
     #topo.draw_network_image(dimension='3D',perspective=False,axis='x')
-    
-    topo.draw_3d_network(geology=geo,show=True,horizons=[4])
-   # topo.draw_adjacency_matrix()
-   # topo.draw_network_hive()
-    
-    #struct = topo.collapse_stratigraphy()
-    #struct.draw_matrix_image()
-    
-    #litho = topo.collapse_topology()
-    #litho.draw_matrix_image()
     
     #draw matrix
     #topo.draw_matrix_image()

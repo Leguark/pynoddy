@@ -8,14 +8,7 @@ Created on Monday Jul 13 10:09:55 2015
 import sys, os
 
 import pynoddy
-import pynoddy.history
-# from pynoddy.experiment import Experiment
-
-# import pynoddy.experiment
-try:
-    from experiment import Experiment
-except ImportError:
-    from pynoddy.experiment import Experiment
+from pynoddy.experiment import Experiment
 
 class MonteCarlo(Experiment):
     '''
@@ -41,18 +34,14 @@ class MonteCarlo(Experiment):
         '''
         
         super(Experiment, self).__init__(history) #initialise
-#         super().__init__(history) #initialise
         
         
         if isinstance(parameters,str): #if parameters is a file path
             self.load_parameter_file(parameters)
         else:
-            assert(type(parameters) is list)
-            self.set_parameter_statistics(parameters)
+            print "Error: parameter dictionares are not yet implemented"
         
         self.basename = base_name
-        
-        self.freeze()
         
     @staticmethod
     def generate_models_from_existing_histories(path,**kwds):
@@ -113,7 +102,7 @@ class MonteCarlo(Experiment):
             output = path.split('.')[0]
             
             #call noddy
-            if force or not os.path.exists(output+".g12"): #if noddy files don't exist, or force is true
+            if force or not os.path.exists(output+".g01"): #if noddy files don't exist, or force is true
                 if vb:
                     print("Running %s... " % output)
                     print(pynoddy.compute_model(path, output, sim_type = stype))
@@ -149,23 +138,22 @@ class MonteCarlo(Experiment):
         - *sim_type* = The type of simulation to run. This can be any of: 'BLOCK', 'GEOPHYSICS', 'SURFACES', 
                        'BLOCK_GEOPHYS', 'TOPOLOGY', 'BLOCK_SURFACES', 'ALL'. Default is 'BLOCK'.
         - *write_changes* = A file (path) to write the parameters used in each model realisation to (minus the extension). 
-                       The default is None (no file written).
+                       The default is a file called 'parameters.csv'. Set as None to disable writing.
         - *verbose* = True if this function sends output to the print buffer. Default is True.
-        - *seed* = The random seed to use in this experiment. If not specified, threads are seeded with PID * TID * time (*nodeID).
-       '''
+        '''
         
         #get args
         vb = kwds.get("verbose",True)
         stype = kwds.get("sim_type","BLOCK")
         threads = kwds.get("threads",1)
-        changes = kwds.get("write_changes",None)
+        changes = kwds.get("write_changes","parameters")
         
         #store path for later
         self.instance_path = path       
         
         #get start time (for timing runs)
-        import time as time
         if vb:
+            import time
             start_time = time.time()
         
         #get variables for seed
@@ -184,7 +172,7 @@ class MonteCarlo(Experiment):
                 nodename = os.uname()[1] #the name of the node it is running on (linux only)
                 
                 #move into node subdirectory
-                path = os.path.join(path,nodename) 
+                path = path.join(path,nodename) 
             
                 #append node name to output
                 if not changes is None:
@@ -196,6 +184,7 @@ class MonteCarlo(Experiment):
                 
             #import thread stuff
             from threading import Thread
+            import time,platform
             
             thread_list = []
             for t in range(0,threads):
@@ -220,11 +209,8 @@ class MonteCarlo(Experiment):
                     change_path = "%s_thread%d" % (changes,t)
                 
                 #set random seed (nodeID * process ID * threadID * time in seconds)
-                t_his.set_random_seed(nodeID + seed_base + t)
+                t_his.set_random_seed(nodeID * seed_base * t)
                 
-                if kwds.has_key('seed'): #override default seed, for reproducable results
-                    t_his.set_random_seed(kwds['seed']+t) #specifed seed + threadID
-                    
                 #initialise thread
                 t = Thread(target=t_his.generate_model_instances,args=(threadpath,n),kwargs={'sim_type' : stype, 'verbose' : vb, 'write_changes' : change_path})
                 
@@ -283,11 +269,9 @@ class MonteCarlo(Experiment):
                    
             #write changes
             if not (changes is None):
-                if vb:
-                    print "Writing parameter changes to %s..." % (changes + ".csv")
+                print "Writing parameter changes to %s..." % (changes + ".csv")
                 self.write_parameter_changes(changes+".csv")
-                if vb:
-                    print "Complete."
+                print "Complete."
            
     def cleanup(self, **kwds ):
         '''
@@ -310,7 +294,7 @@ class MonteCarlo(Experiment):
             
         #delete files
         path = os.path.basename(self.basename)
-        MonteCarlo.clean(self.instance_path,path,**kwds)
+        MonteCarlo.clean(self.instance_path,path,delete_noddy_working_files=del_noddy,delete_noddy_history_files=del_his,delete_topology_files=del_topo)
         
                             
     @staticmethod                      
@@ -346,10 +330,7 @@ class MonteCarlo(Experiment):
                     if del_noddy:
                         for e in ['.g00', '.g01', '.g02', '.g12', '.g20', '.g21', '.g22']:
                             if e in f:
-                                try:
-                                    os.remove(p)
-                                except Exception as e: #for file not found
-                                    continue  #donothing
+                                os.remove(p)
                                 
                     #delete topology files
                     if del_topo:
@@ -424,28 +405,8 @@ class MonteCarlo(Experiment):
         
         vb = args.get('verbose',True)
         
-        if vb:
-            print "Loading models in %s" % path
-        
-        #array of topology objects
-        from pynoddy.output import NoddyOutput
-        models = []        
-        
-        for root, dirnames, filenames in os.walk(path): #walk the directory
-            for f in filenames:
-                if ('.g12' in f): #find all topology files
-                    base = os.path.join(root,f.split('.')[0])
-                    
-                    if vb:
-                        print 'Loading %s' % base
-                        
-                    #load & store model
-                    models.append(NoddyOutput(base))   
-        
-        if vb:
-            print "Complete."
-            
-        return models
+        #TODO
+        print "Error: load_noddy_realisations has not been implemented yet. Sorry."
         
 if __name__ == '__main__':
         
@@ -462,28 +423,24 @@ if __name__ == '__main__':
     
     #setup working directory
     os.chdir(r'C:\Users\Sam\OneDrive\Documents\Masters\Models\Primitive\monte carlo test')
-    #os.chdir("/Users/flow/git/pynoddy/sandbox")
     his_file = "foldUC.his"
-#   his_file = "simple_two_faults_no_gps.his"
     params_file = "foldUC_params.csv"
-#   params_file = "params.csv"
     
     #create new MonteCarlo experiment
     mc = MonteCarlo(his_file,params_file)
-    mc.freeze()
     
     #generate 100 random perturbations using 4 separate threads (in TOPOLOGY mode)
     output_name = "mc_out"
     n = 10
-    print(mc.generate_model_instances(output_name,n,threads=4))
+    mc.generate_model_instances(output_name,n,sim_type="TOPOLOGY",threads=4)
     
     #load output
-    #topologies = MonteCarlo.load_topology_realisations(output_name, verbose=True)
+    topologies = MonteCarlo.load_topology_realisations(output_name, verbose=True)
     
     #calculate unique topologies
-    #from pynoddy.output import NoddyTopology
-    #uTopo = NoddyTopology.calculate_unique_topologies(topologies,output="accumulate.csv")
-    #print "%d unique topologies found in %d simulations" % (len(uTopo),len(topologies))
+    from pynoddy.output import NoddyTopology
+    uTopo = NoddyTopology.calculate_unique_topologies(topologies,output="accumulate.csv")
+    print "%d unique topologies found in %d simulations" % (len(uTopo),len(topologies))
     
     #cleanup
     #mc.cleanup()

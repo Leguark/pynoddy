@@ -10,10 +10,11 @@ Thought: perhaps drawing functions etc. should be moved into NoddyOutput class?
 import os
 import numpy as np
 
+
 from pynoddy.history import NoddyHistory
 from pynoddy.output import NoddyOutput
 
-import util.sampling as Sample
+import sampling as Sample
 
 class Experiment(NoddyHistory,NoddyOutput):
     '''Noddy experiment container, inheriting from both noddy history and output methods
@@ -65,9 +66,6 @@ class Experiment(NoddyHistory,NoddyOutput):
         """
         self.param_stats = param_stats
         
-        if not hasattr(self,'base_events'): #if this model has not been frozen before
-            self.freeze()
-            
     def load_parameter_file(self, filename, **kwds):
         """Load parameter statistics from external csv file
         
@@ -76,16 +74,16 @@ class Experiment(NoddyHistory,NoddyOutput):
         
         - 'event' : event id
         - 'parameter' : Noddy parameter ('Dip', 'Dip Direction', etc.)
-        - 'mean' : mean parameter value
-        - 'type' = 'normal', 'vonmises' or 'uniform'.
-       
-        In addition, it is necessary to define PDF type and parameters. For now, the following settings are supported:
-        - '+-' = Defines the 2.5th and 97.5th percentiles of the distribution, 
-                 similar to a 95% confidence interval.
-        - 'stdev' = standard deviation. Only works if type='normal'.
-        - 'min' = The minimum value of a uniform distribution (if type='uniform')
-        - 'max' = The maximum value of a uniform distribution (if type='uniform')
+        - 'min' : minimum value
+        - 'max' : maximum value
+        - 'initial' : initial value
         
+        In addition, it is possible to define PDF type and parameters. For now, the following settings are supported:
+        
+        - 'type' = 'normal' 
+        - 'stdev' : standard deviation
+        - 'mean' : mean value (default: 'initial' value)
+
         **Arguments**:
             - *filename* = string : filename
             
@@ -94,7 +92,6 @@ class Experiment(NoddyHistory,NoddyOutput):
         """
         lines = open(filename).readlines()
         delim = kwds.get("delim", ",")
-        
         # test if "," is actually the delimiter - if not, try ';' (stupid Excel standard...)
         header = lines[0].rstrip().split(delim)
         if len(header) == 1:
@@ -112,23 +109,15 @@ class Experiment(NoddyHistory,NoddyOutput):
             for ele in header:
                 if ele == '': continue # empty column in header
                 if ele == 'event':
-                    event_code = l[header.index(ele)]
-                    evts = []
-                    for e in event_code.split('|'): #multiple events can be separated by |
-                        evts.append(int(e)) #append events   
-                    param_dict[ele] = tuple(evts)
+                    param_dict[ele] = int(l[header.index(ele)])
                     continue
                 try:
                     param_dict[ele] = float(l[header.index(ele)])
                 except ValueError: # not a number
                     param_dict[ele] = l[header.index(ele)]
-                    
-                    
             self.param_stats.append(param_dict)
         
-        if not hasattr(self,'base_events'): #if this model has not been frozen before
-            self.freeze()
-            
+        
     def freeze(self, **kwds):
         """Freeze the current model state: store the event settings for later comparison"""
         self.base_events = self.copy_events()
@@ -147,7 +136,6 @@ class Experiment(NoddyHistory,NoddyOutput):
             - *random_seed* = int (or array-like) : define seed
         """
         self.seed = random_seed
-        
         # apply random seed
         np.random.seed(random_seed)
         
@@ -162,56 +150,34 @@ class Experiment(NoddyHistory,NoddyOutput):
         
         This method is based on the model "base-state", and not the current state (as opposed to
         the self.random_perturbation() method).
-        
-        **Optional Keywords**:
-            - *verbose* = bool: print out parameter changes as they happen (default: False)  
-            - *store_params* = bool : store random parameter set (default: True)
-
         """
         self.reset_base()
-        self.random_perturbation(**kwds)
+        self.random_perturbation()
         
     def random_perturbation(self, **kwds):
         """Perform a random perturbation of the model according to parameter statistics
-        defined in self.param_stats. 
-        
-        Note that by default, this function is identical to random_draw. If model_type is 
-        set to 'current', then parameters are varied according using the *current values* 
-        as distribution means - this allows 'random walk' away from the initial model state, 
-        which is usually not desired.
+        defined in self.param_stats
         
         **Optional arguments**:
             - *store_params* = bool : store random parameter set (default: True)
-            - *verbose* = bool: print out parameter changes as they happen (default: False)
-            - *model_type* = 'base', 'current' : perturb on basis of current model, 
-                            or use base model (default: 'base' model)
+            - *verbose* = bool: print out parameter changes as they happen (default: True)
         """
-        
         store_params = kwds.get("store_params", True)
-        verbose = kwds.get("verbose", False)
+        verbose = kwds.get("verbose",True)
         
         # create a dictionary for event parameter changes:
         param_changes = {} #relative parameter changes
         absolute_changes = {} #absolute parameter changes
         
         #calculate new values according to 'statistics'
-        for param in self.param_stats:
-                      
-            #if param['event'] is not a tuple, make it one
-            if not type(param['event']) is tuple:
-                param['event'] = (param['event'],) #cast to tuple
-                
-            for e in param['event']: #intialise param changes dictionaries
-                if not param_changes.has_key(e):
-                    param_changes[e] = {}
-                    absolute_changes[e] = {}
+        for param in self.param_stats: 
+                        
+            if not param_changes.has_key(param['event']): #initialise dictionary for this event if necessary
+                param_changes[param['event']] = {}
+                absolute_changes[param['event']] = {}
 
-            # get original value
-            model_type = kwds.get('model_type', 'base')
-            if model_type == 'base':
-                ori_val = self.base_events[ param['event'][0]].properties[param['parameter']]
-            else:
-                ori_val = self.events[ param['event'][0]].properties[param['parameter']]
+            # get original value: NB - this is the current model state, not the initial model state - beware of random walk!
+            ori_val = self.events[param['event']].properties[param['parameter']]
             
             #sample value from appropriate distribution
             random_val = 0
@@ -259,15 +225,14 @@ class Experiment(NoddyHistory,NoddyOutput):
                     raise AttributeError("Sampling for type %s not yet implemented, sorry." % param['type'])
                 
                 #store relative changes
-                for e in param['event']:
-                    param_changes[e][param['parameter']] = random_val - self.events[ param['event'][0]].properties[param['parameter']]
-    
-                    #store absolute changes
-                    absolute_changes[e][param['parameter']] = random_val
+                param_changes[param['event']][param['parameter']] = random_val - ori_val
 
-                    #print changes
-                    if verbose:
-                        print('Changing %s to %s' % (param['parameter'],random_val))
+                #store absolute changes
+                absolute_changes[param['event']][param['parameter']] = random_val
+
+                #print changes
+                if verbose:
+                    print('Changing %s to %s' % (param['parameter'],random_val))
                 
             else:
                 raise AttributeError("Please define type of parameter statistics ('type' keyword in table)")
@@ -482,16 +447,16 @@ class Experiment(NoddyHistory,NoddyOutput):
             f.write("ChangeNumber")
             change_list = []
             for e, c in self.random_parameter_changes[0].iteritems(): #NB: This only works if the same parameters have been changed at each step!
-                for p, v in c.iteritems():
-                    f.write(",Event_%s_%s" % (e,p)) #write parameter: eg. Event_1_Amplitude
+                     for p, v in c.iteritems():
+                         f.write(",Event_%s_%s" % (e,p)) #write parameter: eg. Event_1_Amplitude
             
             #retrieve values
             i = 0
             for change in self.random_parameter_changes:
                 change_list.append([]) #list of changes
                 for e, c in change.iteritems():
-                    for p, v in c.iteritems():
-                        change_list[i].append(v) #store value
+                     for p, v in c.iteritems():
+                         change_list[i].append(v) #store value
                 i = i + 1
                 
             #write values

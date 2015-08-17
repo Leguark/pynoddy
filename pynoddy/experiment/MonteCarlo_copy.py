@@ -1,6 +1,5 @@
 import numpy as np
 
-import pynoddy
 from pynoddy.experiment import Experiment
 
 class MonteCarlo(Experiment):
