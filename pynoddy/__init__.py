@@ -1,19 +1,19 @@
 """Package initialization file for pynoddy"""
 import os.path
 
- #Import additional modules of pynoddy
-# from . import history
-#from history import NoddyHistory
-# from . import output
-#from output import NoddyOutput
-#from output import NoddyTopology
+# Import additional modules of pynoddy
+from . import history
+from history import NoddyHistory
+from . import output
+from output import NoddyOutput
+from output import NoddyTopology
 
 #save this module path for relative paths
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 #paths to noddy & topology executables
-noddyPath = os.path.join(package_directory,'../noddy')
-topologyPath = os.path.join(package_directory,'../topology')
+noddyPath = os.path.join(package_directory,'../noddy/noddy')
+topologyPath = os.path.join(package_directory,'../topology/topology')
 
 #global variables
 ensure_discrete_volumes = True #if True, spatially separated but otherwise identical volumes are given separate codes.
