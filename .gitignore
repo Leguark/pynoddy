@@ -4,6 +4,8 @@
 sandbox/*
 !sandbox/README.txt
 
+noddy_bak/*
+
 examples/tmp
 examples/*vtr
 examples/*pkl
@@ -24,6 +26,9 @@ docs/notebooks/*g??
 docs/notebooks/*dxf
 docs/notebooks/*grv
 docs/notebooks/*mag
+
+docs/notebooks/*pkl
+docs/notebooks/*zip
 
 # C extensions
 *.so
@@ -60,7 +65,6 @@ nosetests.xml
 .project
 .pydevproject
 GBasin_uncertainty.zip
-*.zip
 noddy.exe
 *.swp
 *.vtr
@@ -72,3 +76,15 @@ pynoddy/sampling-SamT15.py
 topology/old_version/compile.bat
 topology/old_version/topology.exe
 topology/old_version/topology.c
+<<<<<<< HEAD
+=======
+pynoddy/noddyBatchProgress.txt
+docs/notebooks/parameters_thread0.csv
+docs/notebooks/parameters_thread2.csv
+*.pkl
+.idea
+docs/5-Geophysical-Potential-Fields_files
+docs/2-Adjust-input_files
+1-Simulation_14_0.png
+docs/bak
+>>>>>>> refs/remotes/flohorovicic/master

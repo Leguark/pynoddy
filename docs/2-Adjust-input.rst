@@ -19,6 +19,7 @@ events themselves, please be patient until we get to the next section.
 
 
 
+
 .. raw:: html
 
     <link href='http://fonts.googleapis.com/css?family=Alegreya+Sans:100,300,400,500,700,800,900,100italic,300italic,400italic,500italic,700italic,800italic,900italic' rel='stylesheet' type='text/css'>
@@ -159,19 +160,33 @@ events themselves, please be patient until we get to the next section.
 
 .. code:: python
 
+    cd ../docs/notebooks/
+
+
+.. parsed-literal::
+
+    /Users/flow/git/pynoddy/docs/notebooks
+
+
+.. code:: python
+
     %matplotlib inline
+
 .. code:: python
 
     import sys, os
     import matplotlib.pyplot as plt
+    import numpy as np
     # adjust some settings for matplotlib
     from matplotlib import rcParams
     # print rcParams
     rcParams['font.size'] = 15
     # determine path of repository to set paths corretly below
-    os.chdir(r'/Users/flow/git/pynoddy/docs/notebooks/')
     repo_path = os.path.realpath('../..')
     import pynoddy
+    import pynoddy.history
+    import pynoddy.output
+
 First step: load the history file into a Python object:
 
 .. code:: python
@@ -185,13 +200,6 @@ First step: load the history file into a Python object:
     history = os.path.join(example_directory, history_file)
     output_name = 'noddy_out'
     H1 = pynoddy.history.NoddyHistory(history)
-
-.. parsed-literal::
-
-     STRATIGRAPHY
-     FAULT
-     FAULT
-
 
 **Technical note**: the ``NoddyHistory`` class can be accessed on the
 level of pynoddy (as it is imported in the ``__init__.py`` module) with
@@ -216,6 +224,7 @@ more will be added soon!), for example the total number of events:
 
     print("The history contains %d events" % H1.n_events)
 
+
 .. parsed-literal::
 
     The history contains 3 events
@@ -231,11 +240,12 @@ history object:
 
 
 
+
 .. parsed-literal::
 
-    {1: <pynoddy.events.Stratigraphy at 0x106c17750>,
-     2: <pynoddy.events.Fault at 0x106c17790>,
-     3: <pynoddy.events.Fault at 0x106c177d0>}
+    {1: <pynoddy.events.Stratigraphy at 0x103ac2a50>,
+     2: <pynoddy.events.Fault at 0x103ac2a90>,
+     3: <pynoddy.events.Fault at 0x103ac2ad0>}
 
 
 
@@ -251,6 +261,7 @@ For example, the properties of a fault object are:
 
     H1.events[2].properties
     # print H1.events[5].properties.keys()
+
 
 
 
@@ -294,19 +305,9 @@ A simple example to change the cube size and write a new history file:
 .. code:: python
 
     # We will first recompute the model and store results in an output file for comparison
-    reload(pynoddy.history)
-    reload(pynoddy.output)
     NH1 = pynoddy.history.NoddyHistory(history)
     pynoddy.compute_model(history, output_name) 
     NO1 = pynoddy.output.NoddyOutput(output_name)
-
-.. parsed-literal::
-
-     STRATIGRAPHY
-     FAULT
-     FAULT
-    
-
 
 .. code:: python
 
@@ -319,11 +320,6 @@ A simple example to change the cube size and write a new history file:
     pynoddy.compute_model(new_history, new_output_name)
     NO2 = pynoddy.output.NoddyOutput(new_output_name)
 
-.. parsed-literal::
-
-    
-
-
 The different cell sizes are also represented in the output files:
 
 .. code:: python
@@ -332,6 +328,7 @@ The different cell sizes are also represented in the output files:
           (NO1.n_total, NO1.delx))
     print("Model 2 contains a total of %7d cells with a blocksize %.0f m" %
           (NO2.n_total, NO2.delx)) 
+
 
 .. parsed-literal::
 
@@ -358,7 +355,8 @@ comparison:
 
 
 
-.. image:: 2-Adjust-input_files/2-Adjust-input_19_0.png
+
+.. image:: 2-Adjust-input_files/2-Adjust-input_20_0.png
 
 
 Note: the following two subsections contain some slighly advanced
@@ -394,10 +392,11 @@ practical case, this can be very important.
     print("Simulation time for high-resolution model: %5.2f seconds" % (end_time - start_time))
 
 
+
 .. parsed-literal::
 
-    Simulation time for low-resolution model:  0.67 seconds
-    Simulation time for high-resolution model:  5.30 seconds
+    Simulation time for low-resolution model:  0.73 seconds
+    Simulation time for high-resolution model:  5.78 seconds
 
 
 For an estimation of required computing time for a given discretisation,
@@ -419,13 +418,6 @@ let's evaulate the time for a couple of steps, plot, and extrapolate:
         end_time = time.time()
         times.append(end_time - start_time)
     times = np.array(times)
-
-
-.. parsed-literal::
-
-     STRATIGRAPHY
-     FAULT
-     FAULT
 
 
 .. code:: python
@@ -456,6 +448,7 @@ let's evaulate the time for a couple of steps, plot, and extrapolate:
 
 
 
+
 .. parsed-literal::
 
     (200.0, 40.0)
@@ -463,7 +456,7 @@ let's evaulate the time for a couple of steps, plot, and extrapolate:
 
 
 
-.. image:: 2-Adjust-input_files/2-Adjust-input_25_1.png
+.. image:: 2-Adjust-input_files/2-Adjust-input_26_1.png
 
 
 It is actually quite interesting that the computation time does not
@@ -478,6 +471,8 @@ something like:
 
 .. math::  f(x) = a + \left( b \log_{10}(x) \right)^{-c} 
 
+Let's try to fit the curve with ``scipy.optimize.curve_fit``:
+
 .. code:: python
 
     # perform curve fitting with scipy.optimize
@@ -486,25 +481,21 @@ something like:
     def func(x,a,b,c):
         return a + (b*np.log10(x))**(-c)
     
-    popt, pcov = scipy.optimize.curve_fit(func, cube_sizes, np.array(times))
+    popt, pcov = scipy.optimize.curve_fit(func, cube_sizes, np.array(times), p0 = [-1, 0.5, 2])
     popt
 
-.. parsed-literal::
-
-    -c:5: RuntimeWarning: invalid value encountered in power
-
 
 
 
 .. parsed-literal::
 
-    array([  0.11592463,   0.52153625,  13.73794029])
+    array([ -0.05618538,   0.50990774,  12.45183398])
 
 
 
 Interesting, it looks like Noody scales with something like:
 
-.. math::  f(x) = -1.16 + \left( 0.5 \log_{10}(x) \right)^{-2} 
+.. math::  f(x) = \left( 0.5 \log_{10}(x) \right)^{-12} 
 
 **Note**: if you understand more about computational complexity than me,
 it might not be that interesting to you at all - if this is the case,
@@ -524,6 +515,7 @@ please contact me and tell me why this result could be expected...
 
 
 
+
 .. parsed-literal::
 
     (200.0, 20.0)
@@ -531,7 +523,7 @@ please contact me and tell me why this result could be expected...
 
 
 
-.. image:: 2-Adjust-input_files/2-Adjust-input_29_1.png
+.. image:: 2-Adjust-input_files/2-Adjust-input_30_1.png
 
 
 Not too bad... let's evaluate the time for a cube size of 40 m:
@@ -542,9 +534,10 @@ Not too bad... let's evaluate the time for a cube size of 40 m:
     time_est = func(cube_size, a, b, c)
     print("Estimated time for a cube size of %d m: %.1f seconds" % (cube_size, time_est))
 
+
 .. parsed-literal::
 
-    Estimated time for a cube size of 40 m: 11.9 seconds
+    Estimated time for a cube size of 40 m: 12.4 seconds
 
 
 Now let's check the actual simulation time:
@@ -560,9 +553,10 @@ Now let's check the actual simulation time:
     
     print("Actual computation time for a cube size of %d m: %.1f seconds" % (cube_size, time_comp))
 
+
 .. parsed-literal::
 
-    Actual computation time for a cube size of 40 m: 10.4 seconds
+    Actual computation time for a cube size of 40 m: 11.6 seconds
 
 
 Not too bad, probably in the range of the inherent variability... and if
@@ -580,6 +574,7 @@ we check it in the plot:
 
 
 
+
 .. parsed-literal::
 
     (200.0, 20.0)
@@ -587,7 +582,7 @@ we check it in the plot:
 
 
 
-.. image:: 2-Adjust-input_files/2-Adjust-input_35_1.png
+.. image:: 2-Adjust-input_files/2-Adjust-input_36_1.png
 
 
 Anyway, the point of this excercise was not a precise evaluation of
@@ -641,13 +636,6 @@ the rock volumes of each defined geological unit:
         O_tmp.determine_unit_volumes()
         all_volumes.append(O_tmp.unit_volumes)
 
-.. parsed-literal::
-
-     STRATIGRAPHY
-     FAULT
-     FAULT
-
-
 .. code:: python
 
     all_volumes = np.array(all_volumes)
@@ -675,19 +663,18 @@ the rock volumes of each defined geological unit:
 
 
 
+
 .. parsed-literal::
 
-    <matplotlib.text.Text at 0x105adcf10>
+    <matplotlib.text.Text at 0x107eb7250>
 
 
 
 
-.. image:: 2-Adjust-input_files/2-Adjust-input_39_1.png
+.. image:: 2-Adjust-input_files/2-Adjust-input_40_1.png
 
 
 It looks like the volumes would start to converge from about a block
 size of 100 m. The example model is pretty small and simple, probably
 not the best example for this study. Try it out with your own, highly
 complex, favourite pet model :-)
-
-

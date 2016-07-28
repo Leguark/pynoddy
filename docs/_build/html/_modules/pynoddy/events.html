@@ -163,10 +163,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span> <span class="o">=</span> <span class="n">lines</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">property_lines</span> <span class="o">=</span> <span class="p">{}</span> <span class="c"># required to reassign properties later!</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
             <span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)</span>
+            <span class="c"># print(&quot;Load event properties&quot;)</span>
             <span class="k">if</span> <span class="s">&quot;Event #&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span> <span class="k">continue</span>
-            <span class="k">if</span> <span class="s">&quot;Fourier&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&quot;Fourier Series&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                 <span class="c"># finished with parsing events </span>
                 <span class="n">geometry_info_finished</span> <span class="o">=</span> <span class="bp">True</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">geometry_info_finished</span><span class="p">:</span>
@@ -272,8 +273,49 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         </div></div>
 <div class="viewcode-block" id="Plug"><a class="viewcode-back" href="../../pynoddy.html#pynoddy.events.Plug">[docs]</a><span class="k">class</span> <span class="nc">Plug</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-    <span class="k">pass</span> <span class="c">#not implemented yet</span>
-    </div>
+    <span class="sd">&quot;&quot;&quot;Plug event</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;init dyke event</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#iterate through lines and determine attributes</span>
+        <span class="k">if</span> <span class="n">kwds</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&quot;lines&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse_event_lines</span><span class="p">(</span><span class="n">kwds</span><span class="p">[</span><span class="s">&#39;lines&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="c">#=&#39;DYKE&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Warning, lines argument not passed. Null event (dyke) created&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="Plug.parse_event_lines"><a class="viewcode-back" href="../../pynoddy.html#pynoddy.events.Plug.parse_event_lines">[docs]</a>    <span class="k">def</span> <span class="nf">parse_event_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lines</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read specific event lines from history file</span>
+<span class="sd">        **Arguments**:</span>
+<span class="sd">            - *lines* = list of lines : lines with event information (as stored in .his file)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">geometry_info_finished</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span> <span class="o">=</span> <span class="n">lines</span> <span class="c">#store a copy of original lines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span> <span class="c">#properties dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">property_lines</span> <span class="o">=</span> <span class="p">{}</span> <span class="c">#so that properties can be changed later</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s">&quot;Event #&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span> <span class="k">continue</span> <span class="c">#first line</span>
+            <span class="k">if</span> <span class="s">&quot;Alteration Type&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span> <span class="c">#end of geometry properties</span>
+                <span class="n">geometry_info_finished</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">break</span> <span class="c">#we don&#39;t need to look at any more lines</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">geometry_info_finished</span><span class="p">:</span> <span class="c">#parse geometry properties</span>
+                <span class="c"># convert value to float if it is not a string</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="c">#print(&quot;Adding property \&quot;%s\&quot; with value \&quot;%s\&quot;.&quot; % (l[0].strip(),value))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="c"># not a number, so just keep string</span>
+                    <span class="k">pass</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span> <span class="c">#store property (key) and value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">property_lines</span><span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">i</span> <span class="c">#store line number of property</span>
+        <span class="c"># the event name always seems to be in the last line - check with</span>
+        <span class="c"># Mark if this is really the case!    </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    </div></div>
 <div class="viewcode-block" id="Strain"><a class="viewcode-back" href="../../pynoddy.html#pynoddy.events.Strain">[docs]</a><span class="k">class</span> <span class="nc">Strain</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Strain event</span>
 <span class="sd">    </span>
@@ -427,7 +469,51 @@
         <span class="c"># the event name always seems to be in the last line - check with</span>
         <span class="c"># Mark if this is really the case!    </span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="Shear"><a class="viewcode-back" href="../../pynoddy.html#pynoddy.events.Shear">[docs]</a><span class="k">class</span> <span class="nc">Shear</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Shear zone event</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fault event</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># iterate through lines and determine attributes</span>
+        <span class="k">if</span> <span class="n">kwds</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&quot;lines&quot;</span><span class="p">)</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse_event_lines</span><span class="p">(</span><span class="n">kwds</span><span class="p">[</span><span class="s">&#39;lines&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Shear.parse_event_lines"><a class="viewcode-back" href="../../pynoddy.html#pynoddy.events.Shear.parse_event_lines">[docs]</a>    <span class="k">def</span> <span class="nf">parse_event_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read specific event lines from history file</span>
+<span class="sd">        </span>
+<span class="sd">        **Arguments**:</span>
+<span class="sd">            - *lines* = list of lines : lines with event information (as stored in .his file)         </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">geometry_info_finished</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span> <span class="o">=</span> <span class="n">lines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">property_lines</span> <span class="o">=</span> <span class="p">{}</span> <span class="c"># required to reassign properties later!</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s">&quot;Event #&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">if</span> <span class="s">&quot;Fourier&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="c"># finished with parsing events </span>
+                <span class="n">geometry_info_finished</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">geometry_info_finished</span><span class="p">:</span>
+                <span class="c"># parse events</span>
+                <span class="c"># convert value to float if it is not a string</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="c"># not a number, so just keep float</span>
+                    <span class="k">pass</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">property_lines</span><span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">i</span>
         
+        <span class="c"># the event name always seems to be in the last line - check with</span>
+        <span class="c"># Mark if this is really the case!    </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>     
         
         </div></div>
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
@@ -487,7 +573,7 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2014, Florian Wellmann.
+        &copy; Copyright 2014, Florian Wellmann, Sam Thiele.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>

@@ -12,12 +12,23 @@ Contents:
    :maxdepth: 4
 
    readme
+   noddy_module
+   topology
 
    notebooks/1-Simulation
    notebooks/2-Adjust-input
    notebooks/3-Events
+<<<<<<< HEAD
    notebooks/4-Stochastic-Events
    notebooks/5-Uncertainties
+=======
+   notebooks/4-Create-model
+   notebooks/5-Geophysical-Potential-Fields
+   notebooks/6-Reproducible-Experiments
+   notebooks/7-Gippsland-Basin-Uncertainty
+   notebooks/8-Sensitivity-Analysis
+   notebooks/9-Topology
+>>>>>>> refs/remotes/flohorovicic/master
 
    pynoddy
    pynoddy.events

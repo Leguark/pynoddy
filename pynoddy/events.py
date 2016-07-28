@@ -3,6 +3,10 @@ Created on Mar 26, 2014
 
 @author: Florian Wellmann
 '''
+# enable logging capabilities for debugging
+import logging
+reload(logging)
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.CRITICAL, datefmt='%I:%M:%S')
 
 class Event(object):
     '''Main class container for geological events
@@ -69,8 +73,16 @@ class Stratigraphy(Event):
         """Sedimentary pile with defined stratigraphy
 
         """
+        # initialise variables
+        self.properties = {}
+        self.property_lines = {} # required to reassign properties later!
+        self.layer_names = []
+        self.num_layers = 0
+        self.layers = []
+        self.event_lines = []
+
         # iterate through lines and determine attributes
-        if kwds.has_key("lines") :
+        if kwds.has_key("lines"):
             self.parse_event_lines(kwds['lines'])
             self.event_type = self.event_lines[0].split("=")[1].strip()
 
@@ -81,14 +93,93 @@ class Stratigraphy(Event):
             - *lines* = list of lines : lines with event information (as stored in .his file)
         """
         self.event_lines = lines
-        # self.properties = {}
         self.num_layers = int(self.event_lines[1].split("=")[1])
         # determine layer names:
-        self.layer_names = []
-        for line in lines:
+        self.layer_begin = []
+        # self.layers = []
+        for i,line in enumerate(lines):
             l = line.split("=")
             if "Unit Name" in l[0]:
                 self.layer_names.append(l[1].rstrip())
+<<<<<<< HEAD
+=======
+                self.layer_begin.append(i)
+        # now: create layer object for each stratigraphy layer:
+        for i_begin in self.layer_begin:
+            self.layers.append(StratiLayer(lines[i_begin:i_begin+19]))
+
+        # geometry_info_finished = False
+        #
+        # for i, line in enumerate(lines):
+        #     l = line.split("=")
+        #     # print("Load event properties")
+        #     if "Event #" in line: continue
+        #     # if "Name" in line:
+        #     #     finished with parsing events
+        #         # geometry_info_finished = True
+        #     if not geometry_info_finished:
+        #         # parse events
+        #         # convert value to float if it is not a string
+        #         value = l[1].strip()
+        #         try:
+        #             value = float(value)
+        #         except ValueError:
+        #             # not a number, so just keep float
+        #             pass
+        #         self.properties[l[0].strip()] = value
+        #         self.property_lines[l[0].strip()] = i
+
+        self.name = self.event_lines[-1].split("=")[1].strip()
+
+    def update_properties(self, **kwds):
+        """Update properties (required if self.properties assignment changed!)
+
+        Note: overwrites function in base Event class!
+
+        """
+
+        # first entry: name of event and number of layers:
+        self.event_lines[1] = "\tNum Layers = %s\n" % (self.num_layers)
+        # now: add information from all stratigraphy layers
+        for i,layer in enumerate(self.layers):
+            for key, value in layer.properties.items():
+                # self.event_lines.append("\t%s = %s\n" % (key, value))
+                # self.event_lines[self.property_lines[key]19*i+2] = "\t%s = %f\n" % (key, value)
+                if isinstance(value, str):
+                    # determine line number from number of layers
+                    self.event_lines[layer.property_lines[key]+19*i+2] = "\t%s = %s\n" % (key, value)
+                else:
+                    self.event_lines[layer.property_lines[key]+19*i+2] = "\t%s = %f\n" % (key, value)
+
+        #
+        # if hasattr(self, 'properties'):
+        #     for key, value in self.properties.items():
+        #         if "Event #" in key: continue
+        #         if isinstance(value, str):
+        #             self.event_lines[self.property_lines[key]] = "\t%s = %s\n" % (key, value)
+        #         else:
+        #             self.event_lines[self.property_lines[key]] = "\t%s = %f\n" % (key, value)
+
+
+class StratiLayer(object):
+    """Single layer of stratigraphy event
+
+    """
+    def __init__(self, layer_lines):
+        self.properties = {}
+        self.property_lines = {}
+        for i, line in enumerate(layer_lines):
+            l = line.split("=")
+            value = l[1].strip()
+            try:
+                value = float(value)
+            except ValueError:
+                # not a number, so just keep float
+                pass
+            self.properties[l[0].strip()] = value
+            self.property_lines[l[0].strip()] = i
+
+>>>>>>> refs/remotes/flohorovicic/master
 
 class Fold(Event):
     """Folding event
@@ -99,7 +190,7 @@ class Fold(Event):
         """Folding event
 
         """
-        if kwds.has_key("lines") :
+        if kwds.has_key("lines"):
             self.parse_event_lines(kwds['lines'])
             self.event_type = self.event_lines[0].split("=")[1].strip()
 
@@ -113,11 +204,17 @@ class Fold(Event):
         self.event_lines = lines
         self.properties = {}
         self.property_lines = {} # required to reassign properties later!
-        for i,line in enumerate(lines):
+        for i, line in enumerate(lines):
             l = line.split("=")
+            # print("Load event properties")
             if "Event #" in line: continue
+<<<<<<< HEAD
             if "Fourier" in line:
                 # finished with parsing events
+=======
+            if "Fourier Series" in line:
+                # finished with parsing events 
+>>>>>>> refs/remotes/flohorovicic/master
                 geometry_info_finished = True
             if not geometry_info_finished:
                 # parse events
@@ -222,7 +319,52 @@ class Dyke(Event):
         self.name = self.event_lines[-1].split("=")[1].strip()
 
 class Plug(Event):
+<<<<<<< HEAD
     pass #not implemented yet
+=======
+    """Plug event
+    
+    """
+    def __init__(self, **kwds):
+        """init dyke event
+        
+        """
+        #iterate through lines and determine attributes
+        if kwds.has_key("lines"):
+            self.parse_event_lines(kwds['lines'])
+            self.event_type = self.event_lines[0].split("=")[1].strip() #='DYKE'
+        else:
+            print("Warning, lines argument not passed. Null event (dyke) created")
+    def parse_event_lines(self,lines):
+        """Read specific event lines from history file
+        **Arguments**:
+            - *lines* = list of lines : lines with event information (as stored in .his file)
+        """
+        geometry_info_finished = False
+        self.event_lines = lines #store a copy of original lines
+        self.properties = {} #properties dict
+        self.property_lines = {} #so that properties can be changed later
+        for i, line in enumerate(lines):
+            l = line.split("=")
+            if "Event #" in line: continue #first line
+            if "Alteration Type" in line: #end of geometry properties
+                geometry_info_finished = True
+                break #we don't need to look at any more lines
+            if not geometry_info_finished: #parse geometry properties
+                # convert value to float if it is not a string
+                value = l[1].strip()
+                #print("Adding property \"%s\" with value \"%s\"." % (l[0].strip(),value))
+                try:
+                    value = float(value)
+                except ValueError:
+                    # not a number, so just keep string
+                    pass
+                self.properties[l[0].strip()] = value #store property (key) and value
+                self.property_lines[l[0].strip()] = i #store line number of property
+        # the event name always seems to be in the last line - check with
+        # Mark if this is really the case!    
+        self.name = self.event_lines[-1].split("=")[1].strip()
+>>>>>>> refs/remotes/flohorovicic/master
 
 class Strain(Event):
     """Strain event
@@ -294,6 +436,11 @@ class Unconformity(Event):
             if "Alteration Type" in line:
                 # finished with parsing events
                 geometry_info_finished = True
+<<<<<<< HEAD
+=======
+            if "Unit Name" in l[0]:
+                self.layer_names.append(l[1].rstrip())
+>>>>>>> refs/remotes/flohorovicic/master
             if not geometry_info_finished:
                 # parse events
                 # convert value to float if it is not a string
@@ -375,8 +522,72 @@ class Fault(Event):
         # Mark if this is really the case!
         self.name = self.event_lines[-1].split("=")[1].strip()
 
+<<<<<<< HEAD
+=======
+class Shear(Event):
+    """Shear zone event
+    """
+
+    def __init__(self, **kwds):
+        """Fault event
+        
+        """
+        # iterate through lines and determine attributes
+        if kwds.has_key("lines") :
+            self.parse_event_lines(kwds['lines'])
+            self.event_type = self.event_lines[0].split("=")[1].strip()
+
+    def parse_event_lines(self, lines):
+        """Read specific event lines from history file
+        
+        **Arguments**:
+            - *lines* = list of lines : lines with event information (as stored in .his file)         
+        """
+        geometry_info_finished = False
+        self.event_lines = lines
+        self.properties = {}
+        self.property_lines = {} # required to reassign properties later!
+        for i,line in enumerate(lines):
+            l = line.split("=")
+            if "Event #" in line: continue
+            if "Fourier" in line:
+                # finished with parsing events 
+                geometry_info_finished = True
+            if not geometry_info_finished:
+                # parse events
+                # convert value to float if it is not a string
+                value = l[1].strip()
+                try:
+                    value = float(value)
+                except ValueError:
+                    # not a number, so just keep float
+                    pass
+                self.properties[l[0].strip()] = value
+                self.property_lines[l[0].strip()] = i
+
+        # the event name always seems to be in the last line - check with
+        # Mark if this is really the case!    
+        self.name = self.event_lines[-1].split("=")[1].strip()
+>>>>>>> refs/remotes/flohorovicic/master
 
 
 if __name__ == '__main__':
     # Some test and debug functions
     pass
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> refs/remotes/flohorovicic/master

@@ -8,18 +8,10 @@ detail how aspects of events can be adapted and their effect evaluated.
 
 .. code:: python
 
-    cd /Users/flow/git/pynoddy/docs/notebooks
-
-.. parsed-literal::
-
-    /Users/flow/git/pynoddy/docs/notebooks
-
-
-.. code:: python
-
     from IPython.core.display import HTML
     css_file = 'pynoddy.css'
     HTML(open(css_file, "r").read())
+
 
 
 
@@ -161,6 +153,10 @@ detail how aspects of events can be adapted and their effect evaluated.
 
 
 
+.. code:: python
+
+    %matplotlib inline
+
 Loading events from a Noddy history
 -----------------------------------
 
@@ -180,10 +176,23 @@ object:
     # print rcParams
     rcParams['font.size'] = 15
     # determine path of repository to set paths corretly below
-    os.chdir(os.getenv('HOME') + '/git/pynoddy/docs/notebooks/')# some basic module imports
     repo_path = os.path.realpath('../..')
     
     import pynoddy
+    import pynoddy.history
+    import pynoddy.events
+    import pynoddy.output
+    reload(pynoddy)
+
+
+
+
+.. parsed-literal::
+
+    <module 'pynoddy' from '/Users/flow/git/pynoddy/pynoddy/__init__.pyc'>
+
+
+
 .. code:: python
 
     # Change to sandbox directory to store results
@@ -205,11 +214,13 @@ object:
     H1.write_history(history)
     pynoddy.compute_model(history, output_name)
 
+
+
+
 .. parsed-literal::
 
-     STRATIGRAPHY
-     FAULT
-     FAULT
+    ''
+
 
 
 Events are stored in the object dictionary "events" (who would have
@@ -221,11 +232,12 @@ thought), where the key corresponds to the position in the timeline:
 
 
 
+
 .. parsed-literal::
 
-    {1: <pynoddy.events.Stratigraphy at 0x10c277f90>,
-     2: <pynoddy.events.Fault at 0x10c277890>,
-     3: <pynoddy.events.Fault at 0x10c277a10>}
+    {1: <pynoddy.events.Stratigraphy at 0x10cf2b410>,
+     2: <pynoddy.events.Fault at 0x10cf2b450>,
+     3: <pynoddy.events.Fault at 0x10cf2b490>}
 
 
 
@@ -237,6 +249,7 @@ defined as:
 .. code:: python
 
     H1.events[3].properties
+
 
 
 
@@ -271,91 +284,45 @@ Changing aspects of geological events
 
 So what we now want to do, of course, is to change aspects of these
 events and to evaluate the effect on the resulting geological model.
-
-Changes are best
+Parameters can directly be updated in the properties dictionary:
 
 .. code:: python
 
-    reload(pynoddy.history)
-    reload(pynoddy.events)
     H1 = pynoddy.history.NoddyHistory(history_ori)
     # get the original dip of the fault
     dip_ori = H1.events[3].properties['Dip']
-    # dip_ori1 = H1.events[2].properties['Dip']
+    
     # add 10 degrees to dip
     add_dip = -10
     dip_new = dip_ori + add_dip
-    # dip_new1 = dip_ori1 + add_dip
     
     # and assign back to properties dictionary:
     H1.events[3].properties['Dip'] = dip_new
     # H1.events[2].properties['Dip'] = dip_new1
 
 
-.. parsed-literal::
-
-     STRATIGRAPHY
-     FAULT
-     FAULT
-
-
 .. code:: python
 
-    pwd
-
-
-
-.. parsed-literal::
-
-    u'/Users/flow/git/pynoddy/sandbox'
-
-
-
-.. code:: python
-
-    H1.events[3]
-
-
-
-.. parsed-literal::
-
-    <pynoddy.events.Fault at 0x10c8e4ad0>
-
-
-
-What is left now is to write the model back to a new history file, to
-recompute the model, and then visualise the output, as before, to
-compare the results:
-
-.. code:: python
-
-    reload(pynoddy.output)
     new_history = "dip_changed"
-    new_output = "dip_changed_out"
-    H1.write_history(new_history)
-    pynoddy.compute_model(new_history, new_output)
+    new_output = "dip_changed_out" 
+    H1.write_history(new_history) 
+    pynoddy.compute_model(new_history, new_output) 
     # load output from both models
-    NO1 = pynoddy.output.NoddyOutput(output_name)
+    NO1 = pynoddy.output.NoddyOutput(output_name) 
     NO2 = pynoddy.output.NoddyOutput(new_output)
-    
     # create basic figure layout
     fig = plt.figure(figsize = (15,5))
     ax1 = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
-    NO1.plot_section('y', position=0, ax = ax1, colorbar=False, title="Dip = %.0f" % dip_ori)
-    NO2.plot_section('y', position=0, ax = ax2, colorbar=False, title="Dip = %.0f" % dip_new)
-    
+    NO1.plot_section('y', position=0, ax = ax1, colorbar=False, title="Dip = %.0f" % dip_ori, savefig=True, fig_filename ="tmp.eps") 
+    NO2.plot_section('y', position=1, ax = ax2, colorbar=False, title="Dip = %.0f" % dip_new)
     plt.show()
 
 
 
-.. image:: 3-Events_files/3-Events_16_0.png
 
+.. image:: 3-Events_files/3-Events_13_0.png
 
-.. code:: python
-
-    pynoddy.compute_model(new_history, new_output)
-    
 
 Changing the order of geological events
 ---------------------------------------
@@ -376,21 +343,7 @@ history object:
 
 .. code:: python
 
-    reload(pynoddy.history)
-    reload(pynoddy.events)
     H1 = pynoddy.history.NoddyHistory(history_ori)
-    H1.change_cube_size(100)
-    # compute model - note: not strictly required, here just to ensure changed cube size
-    
-    H1.write_history(history)
-    pynoddy.compute_model(history, output_name)
-
-.. parsed-literal::
-
-     STRATIGRAPHY
-     FAULT
-     FAULT
-
 
 .. code:: python
 
@@ -398,21 +351,27 @@ history object:
     print H1.events[2].name
     print H1.events[3].name
 
+
 .. parsed-literal::
 
     Fault2
     Fault1
 
 
+We now swap the position of two events in the kinematic history. For
+this purpose, a high-level function can directly be used:
+
 .. code:: python
 
     # Now: swap the events:
     H1.swap_events(2,3)
+
 .. code:: python
 
     # And let's check if this is correctly relfected in the events order now:
     print H1.events[2].name
     print H1.events[3].name
+
 
 .. parsed-literal::
 
@@ -429,6 +388,16 @@ changed order in a cross section view:
     new_output = "faults_out"
     H1.write_history(new_history)
     pynoddy.compute_model(new_history, new_output)
+
+
+
+
+.. parsed-literal::
+
+    ''
+
+
+
 .. code:: python
 
     reload(pynoddy.output)
@@ -446,7 +415,8 @@ changed order in a cross section view:
 
 
 
-.. image:: 3-Events_files/3-Events_25_0.png
+
+.. image:: 3-Events_files/3-Events_22_0.png
 
 
 Determining the stratigraphic difference between two models
@@ -466,28 +436,45 @@ compute:
 .. code:: python
 
     diff = (NO2.block - NO1.block)
+
 And create a simple visualisation of the difference in a slice plot
 with:
 
 .. code:: python
 
-    fig = plt.figure()
+    fig = plt.figure(figsize = (5,3))
     ax = fig.add_subplot(111)
-    ax.imshow(diff[:,10,:].transpose(), interpolation='nearest')
+    ax.imshow(diff[:,10,:].transpose(), interpolation='nearest', 
+              cmap = "RdBu", origin = 'lower left')
+
 
 
 
 .. parsed-literal::
 
-    <matplotlib.image.AxesImage at 0x10bc8e490>
+    <matplotlib.image.AxesImage at 0x10cf3be10>
 
 
 
 
-.. image:: 3-Events_files/3-Events_29_1.png
+.. image:: 3-Events_files/3-Events_26_1.png
 
 
 (Adding a meaningful title and axis labels to the plot is left to the
 reader as simple excercise :-) Future versions of pynoddy might provide
 an automatic implementation for this step...)
 
+Again, we may want to visualise results in 3-D. We can use the
+``export_to_vtk``-function as before, but now assing the data array to
+be exported as the calulcated differnce field:
+
+.. code:: python
+
+    NO1.export_to_vtk(vtk_filename = "model_diff", data = diff)
+
+A 3-D view of the difference plot is presented below.
+
+.. figure:: 3-Events_files/diff_3d_3.png
+   :alt: 3-D visualisation of stratigraphic id difference
+
+   3-D visualisation of stratigraphic id difference

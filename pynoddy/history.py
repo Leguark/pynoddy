@@ -4,7 +4,7 @@ Created on 24/03/2014
 @author: Florian Wellmann
 '''
 
-import time # for header in model generation
+import time  # for header in model generation
 import numpy as np
 # import numpy as np
 # import matplotlib.pyplot as plt
@@ -32,19 +32,27 @@ class NoddyHistory(object):
         file is opened!
         """
 
+<<<<<<< HEAD
         vb = kwds.get('verbose',False)
+=======
+        vb = kwds.get('verbose', False)
+>>>>>>> refs/remotes/flohorovicic/master
 
         if history is None:
             if kwds.has_key("url"):
                 self.load_history_from_url(kwds['url'])
-                self.determine_events(verbose = vb)
+                self.determine_events(verbose=vb)
             else:
                 # generate a new history
                 self.create_new_history()
         else:
             # load existing history
             self.load_history(history)
+<<<<<<< HEAD
             self.determine_events(verbose = vb)
+=======
+            self.determine_events(verbose=vb)
+>>>>>>> refs/remotes/flohorovicic/master
 
     def __repr__(self):
         """Print out model information"""
@@ -66,7 +74,11 @@ class NoddyHistory(object):
         """
         events_only = kwds.get("events_only", False)
 
+<<<<<<< HEAD
         os = ""
+=======
+        local_os = ""
+>>>>>>> refs/remotes/flohorovicic/master
 
         if not events_only:
             # First: check if all information available
@@ -75,11 +87,12 @@ class NoddyHistory(object):
             if not hasattr(self, 'cube_size'): self.get_cube_size()
             if not hasattr(self, 'filename'): self.get_filename()
             if not hasattr(self, 'date_saved'): self.get_date_saved()
-            os +=(60 * "*" + "\n\t\t\tModel Information\n" + 60 * "*")
-            os +=("\n\n")
+            local_os += (60 * "*" + "\n\t\t\tModel Information\n" + 60 * "*")
+            local_os += ("\n\n")
         if self.n_events == 0:
-            os +=("The model does not yet contain any events\n")
+            local_os += ("The model does not yet contain any events\n")
         else:
+<<<<<<< HEAD
             os +=("This model consists of %d events:\n" % self.n_events)
             for k,ev in self.events.items():
                 os +=("\t(%d) - %s\n" % (k,ev.event_type))
@@ -99,15 +112,41 @@ class NoddyHistory(object):
                                                                           self.origin_z))
 
             os +=("The cubesize for model export is: \n\t%d m\n" % self.cube_size)
-            # and now some metadata
-            os +=("\n\n")
-            os +=(60 * "*" + "\n\t\t\tMeta Data\n" + 60 * "*")
-            os +=("\n\n")
-            os +=("The filename of the model is:\n\t%s\n" % self.filename)
-            os +=("It was last saved (if origin was a history file!) at:\n\t%s\n" % self.date_saved)
+=======
+            local_os += ("This model consists of %d events:\n" % self.n_events)
+            for k, ev in self.events.items():
+                local_os += ("\t(%d) - %s\n" % (k, ev.event_type))
+        if not events_only:
+            local_os += ("The model extent is:\n")
+            local_os += ("\tx - %.1f m\n" % self.extent_x)
+            local_os += ("\ty - %.1f m\n" % self.extent_y)
+            local_os += ("\tz - %.1f m\n" % self.extent_z)
 
+            local_os += ("Number of cells in each direction:\n")
+            local_os += ("\tnx = %d\n" % (self.extent_x / self.cube_size))
+            local_os += ("\tny = %d\n" % (self.extent_y / self.cube_size))
+            local_os += ("\tnz = %d\n" % (self.extent_z / self.cube_size))
+
+            local_os += ("The model origin is located at: \n\t(%.1f, %.1f, %.1f)\n" % (self.origin_x,
+                                                                                       self.origin_y,
+                                                                                       self.origin_z))
+
+            local_os += ("The cubesize for model export is: \n\t%d m\n" % self.cube_size)
+>>>>>>> refs/remotes/flohorovicic/master
+            # and now some metadata
+            local_os += ("\n\n")
+            local_os += (60 * "*" + "\n\t\t\tMeta Data\n" + 60 * "*")
+            local_os += ("\n\n")
+            local_os += ("The filename of the model is:\n\t%s\n" % self.filename)
+            local_os += ("It was last saved (if origin was a history file!) at:\n\t%s\n" % self.date_saved)
+
+        return local_os
+
+<<<<<<< HEAD
         return os
 
+=======
+>>>>>>> refs/remotes/flohorovicic/master
     def get_origin(self):
         """Get coordinates of model origin and return and store in local variables
 
@@ -118,14 +157,18 @@ class NoddyHistory(object):
         if not hasattr(self, "footer_lines"):
             self.create_footer_from_template()
 
-        for i,line in enumerate(self.footer_lines):
+        for i, line in enumerate(self.footer_lines):
             if "Origin X" in line:
                 self.origin_x = float(self.footer_lines[i].split("=")[1])
-                self.origin_y = float(self.footer_lines[i+1].split("=")[1])
-                self.origin_z = float(self.footer_lines[i+2].split("=")[1])
+                self.origin_y = float(self.footer_lines[i + 1].split("=")[1])
+                self.origin_z = float(self.footer_lines[i + 2].split("=")[1])
                 break
 
+<<<<<<< HEAD
         return(self.origin_x, self.origin_y, self.origin_z)
+=======
+        return (self.origin_x, self.origin_y, self.origin_z)
+>>>>>>> refs/remotes/flohorovicic/master
 
     def set_origin(self, origin_x, origin_y, origin_z):
         """Set coordinates of model origin and update local variables
@@ -147,11 +190,15 @@ class NoddyHistory(object):
         origin_y_line = "    Origin Y    =   %.2f\n" % origin_y
         origin_z_line = "    Origin Z    =   %.2f\n" % origin_z
 
+<<<<<<< HEAD
         for i,line in enumerate(self.footer_lines):
+=======
+        for i, line in enumerate(self.footer_lines):
+>>>>>>> refs/remotes/flohorovicic/master
             if "Origin X" in line:
                 self.footer_lines[i] = origin_x_line
-                self.footer_lines[i+1] = origin_y_line
-                self.footer_lines[i+2] = origin_z_line
+                self.footer_lines[i + 1] = origin_y_line
+                self.footer_lines[i + 2] = origin_z_line
                 break
 
     def get_extent(self):
@@ -164,14 +211,18 @@ class NoddyHistory(object):
         if not hasattr(self, "footer_lines"):
             self.create_footer_from_template()
 
-        for i,line in enumerate(self.footer_lines):
+        for i, line in enumerate(self.footer_lines):
             if "Length X" in line:
                 self.extent_x = float(self.footer_lines[i].split("=")[1])
-                self.extent_y = float(self.footer_lines[i+1].split("=")[1])
-                self.extent_z = float(self.footer_lines[i+2].split("=")[1])
+                self.extent_y = float(self.footer_lines[i + 1].split("=")[1])
+                self.extent_z = float(self.footer_lines[i + 2].split("=")[1])
                 break
 
+<<<<<<< HEAD
         return(self.extent_x, self.extent_y, self.extent_z)
+=======
+        return (self.extent_x, self.extent_y, self.extent_z)
+>>>>>>> refs/remotes/flohorovicic/master
 
     def set_extent(self, extent_x, extent_y, extent_z):
         """Set model extent and update local variables
@@ -193,11 +244,15 @@ class NoddyHistory(object):
         extent_y_line = "    Length Y    =   %.2f\n" % extent_y
         extent_z_line = "    Length Z    =   %.2f\n" % extent_z
 
+<<<<<<< HEAD
         for i,line in enumerate(self.footer_lines):
+=======
+        for i, line in enumerate(self.footer_lines):
+>>>>>>> refs/remotes/flohorovicic/master
             if "Length X" in line:
                 self.footer_lines[i] = extent_x_line
-                self.footer_lines[i+1] = extent_y_line
-                self.footer_lines[i+2] = extent_z_line
+                self.footer_lines[i + 1] = extent_y_line
+                self.footer_lines[i + 2] = extent_z_line
                 break
 
     def get_drillhole_data(self, x, y, **kwds):
@@ -248,9 +303,14 @@ class NoddyHistory(object):
         pynoddy.compute_model(tmp_his_file, tmp_out_file)
         # 5. open output
         tmp_out = pynoddy.output.NoddyOutput(tmp_out_file)
+<<<<<<< HEAD
         # 6.
         return tmp_out.block[0,0,:]
 
+=======
+        # 6. 
+        return tmp_out.block[0, 0, :]
+>>>>>>> refs/remotes/flohorovicic/master
 
     def load_history(self, history):
         """Load Noddy history
@@ -269,8 +329,13 @@ class NoddyHistory(object):
 
         This method is useful to load a model from the Structural Geophysics
         Atlas on the pages of the Virtual Explorer.
+<<<<<<< HEAD
         See: http://virtualexplorer.com.au/special/noddyatlas/index.html
 
+=======
+        See: http://tectonique.net/asg
+        
+>>>>>>> refs/remotes/flohorovicic/master
         **Arguments**:
             - *url* : url of history file
         """
@@ -292,7 +357,16 @@ class NoddyHistory(object):
         for e in np.sort(self.events.keys()):
             if self.events[e].event_type == 'STRATIGRAPHY':
                 self.model_stratigraphy += self.events[e].layer_names
+<<<<<<< HEAD
 
+=======
+            if self.events[e].event_type == 'UNCONFORMITY':
+                self.model_stratigraphy += self.events[e].layer_names
+            if self.events[e].event_type == 'DYKE':
+                self.model_stratigraphy += self.events[e].name
+            if self.events[e].event_type == 'PLUG':
+                self.model_stratigraphy += self.events[e].name
+>>>>>>> refs/remotes/flohorovicic/master
 
     def determine_events(self, **kwds):
         """Determine events and save line numbers
@@ -302,32 +376,44 @@ class NoddyHistory(object):
                   this parsing might fail!
 
           **Optional Keywords**:
-           - verbose = True if this function is should write to the print bufffer, otherwise False. Default is true.
+           - verbose = True if this function is should write to the print bufffer, otherwise False. Default is False.
         """
 
+<<<<<<< HEAD
         vb = kwds.get('verbose',True)
+=======
+        vb = kwds.get('verbose', False)
+>>>>>>> refs/remotes/flohorovicic/master
 
         self._raw_events = []
-        for i,line in enumerate(self.history_lines):
+        for i, line in enumerate(self.history_lines):
             if "No of Events" in line:
                 self.n_events = int(line.split("=")[1])
             elif "Event #" in line:
+<<<<<<< HEAD
                 event = {}
                 event['type'] = line.split('=')[1].rstrip()
                 event['num'] = int(line[7:9])
                 event['line_start'] = i
+=======
+                event = {'type': line.split('=')[1].rstrip(), 'num': int(line[7:9]), 'line_start': i}
+>>>>>>> refs/remotes/flohorovicic/master
                 self._raw_events.append(event)
             # finally: if the definition for BlockOptions starts, the event definition is over
             elif "BlockOptions" in line:
-                last_event_stop = i-2
+                last_event_stop = i - 2
         # now: find the line ends for the single event blocks
-        for i,event in enumerate(self._raw_events[1:]):
-            self._raw_events[i]['line_end'] = event['line_start']-1
+        for i, event in enumerate(self._raw_events[1:]):
+            self._raw_events[i]['line_end'] = event['line_start'] - 1
         # now adjust for last event
         self._raw_events[-1]['line_end'] = last_event_stop
 
+<<<<<<< HEAD
 
         self.events = {} # idea: create events as dictionary so that it is easier
+=======
+        self.events = {}  # idea: create events as dictionary so that it is easier
+>>>>>>> refs/remotes/flohorovicic/master
         # to swap order later!
         # now create proper event objects for these events
         if vb:
@@ -340,26 +426,35 @@ class NoddyHistory(object):
                 print e['type']
 
             if 'FAULT' in e['type']:
-                ev = events.Fault(lines = event_lines)
-                # set specific aspects first
+                ev = events.Fault(lines=event_lines)
+            elif 'SHEAR_ZONE' in e['type']:
+                ev = events.Shear(lines=event_lines)
             elif 'FOLD' in e['type']:
-                ev = events.Fold(lines = event_lines)
+                ev = events.Fold(lines=event_lines)
             elif 'UNCONFORMITY' in e['type']:
-                ev = events.Unconformity(lines = event_lines)
+                ev = events.Unconformity(lines=event_lines)
             elif 'STRATIGRAPHY' in e['type']:
-                ev = events.Stratigraphy(lines = event_lines)
-            elif 'TILT' in e['type']: # AK
-                ev = events.Tilt(lines = event_lines)
+                event_lines = event_lines[:-1]
+                ev = events.Stratigraphy(lines=event_lines)
+            elif 'TILT' in e['type']:  # AK
+                ev = events.Tilt(lines=event_lines)
             elif 'DYKE' in e['type']:
-                ev = events.Dyke(lines = event_lines)
+                ev = events.Dyke(lines=event_lines)
+            elif 'PLUG' in e['type']:
+                ev = events.Plug(lines=event_lines)
             elif 'STRAIN' in e['type']:
-                ev = events.Strain(lines = event_lines)
+                ev = events.Strain(lines=event_lines)
             else:
                 print "Warning: event of type %s has not been implemented in PyNoddy yet" % e['type']
                 continue
             # now set shared attributes (those defined in superclass Event)
+<<<<<<< HEAD
             order = e['num'] #retrieve event number
             self.events[order] = ev #store events sequentially
+=======
+            order = e['num']  # retrieve event number
+            self.events[order] = ev  # store events sequentially
+>>>>>>> refs/remotes/flohorovicic/master
 
         # determine overall begin and end of the history events
         self.all_events_begin = self._raw_events[0]['line_start']
@@ -376,6 +471,7 @@ class NoddyHistory(object):
             -type: choose geology or geophysics cube size to return. Should be either 'Geology' (default) or 'Geophysics'
         """
 
+<<<<<<< HEAD
         #get args
         sim_type = kwds.get("type", 'Geology')
         cube_string = 'Geology Cube Size' #get geology cube size by default
@@ -383,6 +479,16 @@ class NoddyHistory(object):
             cube_string = 'Geophysics Cube Size' #instead get geophysics cube size
 
         # check if footer exists, if not: create from template
+=======
+        # get args
+        sim_type = kwds.get("type", 'Geophysics')  # everything seems to use this
+        cube_string = 'Geophysics Cube Size'  # get geology cube size by default
+        if ('Geology' in sim_type):
+            cube_string = 'Geology Cube Size'  # instead get geology cube size
+            print "Warning: pynoddy uses the geophysics cube size for all calculations... changing the geology cube size will have no effect internally."
+
+            # check if footer exists, if not: create from template
+>>>>>>> refs/remotes/flohorovicic/master
         if not hasattr(self, "footer_lines"):
             self.create_footer_from_template()
 
@@ -411,28 +517,43 @@ class NoddyHistory(object):
         if not hasattr(self, "footer_lines"):
             self.create_footer_from_template()
 
+<<<<<<< HEAD
 #        lines_new = self.history_lines[:]
         for i,line in enumerate(self.footer_lines):
             if "Geophysics Cube Size" in line:  #correct line, make change
+=======
+        #        lines_new = self.history_lines[:]
+        for i, line in enumerate(self.footer_lines):
+            if "Geophysics Cube Size" in line:  # correct line, make change
+>>>>>>> refs/remotes/flohorovicic/master
                 l = line.split('=')
                 l_new = '%7.2f\r\n' % cube_size
                 line_new = l[0] + "=" + l_new
                 self.footer_lines[i] = line_new
 
+<<<<<<< HEAD
             if "Geology Cube Size" in line: #change geology cube size also
+=======
+            if "Geology Cube Size" in line:  # change geology cube size also
+>>>>>>> refs/remotes/flohorovicic/master
                 l = line.split('=')
                 l_new = '%7.2f\r\n' % cube_size
                 line_new = l[0] + "=" + l_new
                 self.footer_lines[i] = line_new
+<<<<<<< HEAD
         # assign changed lines back to object
 #        self.history_lines = lines_new[:]
+=======
+                # assign changed lines back to object
+            #        self.history_lines = lines_new[:]
+>>>>>>> refs/remotes/flohorovicic/master
 
     def get_footer_lines(self):
         """Get the footer lines from self.history_lines
 
         The footer contains everything below events (all settings, etc.)"""
         # get id of footer from history lines
-        for i,line in enumerate(self.history_lines):
+        for i, line in enumerate(self.history_lines):
             if "#BlockOptions" in line:
                 break
         self.footer_lines = self.history_lines[i:]
@@ -481,17 +602,25 @@ class NoddyHistory(object):
         for event in self.events.values():
             event.update_properties()
 
+<<<<<<< HEAD
 #
 #class NewHistory():
 #    """Methods to create a Noddy model"""
 #
+=======
+        #
+        # class NewHistory():
+        #    """Methods to create a Noddy model"""
+        #
+
+>>>>>>> refs/remotes/flohorovicic/master
     def create_new_history(self):
         """Methods to create a Noddy model
 
         """
         # set event counter
         self.event_counter = 0
-        self.all_events_begin = 7 # default after header
+        self.all_events_begin = 7  # default after header
         self.all_events_end = 7
         # initialise history lines
         self.history_lines = []
@@ -502,7 +631,10 @@ class NoddyHistory(object):
         self.event_counter += 1
         return self.event_counter
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/flohorovicic/master
     def add_event(self, event_type, event_options, **kwds):
         """Add an event type to history
 
@@ -514,8 +646,12 @@ class NoddyHistory(object):
             - *event_num* = int : event number (default: implicitly defined with increasing counter)
         """
 
+<<<<<<< HEAD
         event_num = 4 # kwds.get("event_num", self.get_ev_counter())
 
+=======
+        event_num = kwds.get("event_num", self.get_ev_counter())
+>>>>>>> refs/remotes/flohorovicic/master
 
         if event_type == 'stratigraphy':
             ev = self._create_stratigraphy(event_options)
@@ -525,14 +661,25 @@ class NoddyHistory(object):
             ev = self._create_fault(event_options)
             ev.event_type = 'FAULT'
 
-        elif event_type == 'tilt': # AK
+        elif event_type == 'tilt':  # AK
             ev = self._create_tilt(event_options)
             ev.event_type = 'TILT'
 
+<<<<<<< HEAD
         elif event_type == 'unconformity': # AK
             ev = self._create_unconformity(event_options)
             ev.event_type = 'UNCONFORMITY'
 
+=======
+        elif event_type == 'unconformity':  # AK
+            ev = self._create_unconformity(event_options)
+            ev.event_type = 'UNCONFORMITY'
+
+        elif event_type == 'fold':
+            ev = self._create_fold(event_options)
+            ev.event_type = 'FOLD'
+
+>>>>>>> refs/remotes/flohorovicic/master
 
         else:
             raise NameError('Event type %s not (yet) implemented' % event_type)
@@ -550,7 +697,11 @@ class NoddyHistory(object):
 
     def _create_header(self):
         """Create model header, include actual date"""
+<<<<<<< HEAD
         t = time.localtime() # get current time
+=======
+        t = time.localtime()  # get current time
+>>>>>>> refs/remotes/flohorovicic/master
         time_string = "%d/%d/%d %d:%d:%d" % (t.tm_mday,
                                              t.tm_mon,
                                              t.tm_year,
@@ -564,7 +715,12 @@ Version = 7.11
 
 """
 
+<<<<<<< HEAD
     def _create_stratigraphy(self, event_options):
+=======
+    @staticmethod
+    def _create_stratigraphy(event_options):
+>>>>>>> refs/remotes/flohorovicic/master
         """Create a stratigraphy event
 
         **Arguments**:
@@ -615,6 +771,14 @@ Version = 7.11
             'dip_dir' = [0,360] : dip direction of fault
             'dip' = [0,90] : dip angle of fault
             'slip' = float : slip along fault
+            'geometry' = 'Translation', 'Curved' : geometry of fault plane (default: 'Translation')
+            'movement' = 'Hanging Wall', 'Foot Wall' : relative block movement (default: 'Hanging Wall')
+            'rotation' = float: fault rotation (default: 30.0)
+            'amplitude' = float: (default: 2000.0)
+            'radius' = float: (default: 1000.0)
+            'xaxis' = float: (default: 2000.0)
+            'yaxis' = float: (default: 2000.0)
+            'zaxis' = float: (default: 2000.0)
         """
         ev = events.Fault()
         tmp_lines = [""]
@@ -633,6 +797,20 @@ Version = 7.11
         fault_lines = fault_lines.replace("$DIP$", "%.1f" % event_options['dip'])
         fault_lines = fault_lines.replace("$SLIP$", "%.1f" % event_options['slip'])
 
+<<<<<<< HEAD
+=======
+        fault_lines = fault_lines.replace("$MOVEMENT$", "%s" % event_options.get('movement', 'Hanging Wall'))
+        fault_lines = fault_lines.replace("$GEOMETRY$", "%s" % event_options.get('geometry', 'Translation'))
+        fault_lines = fault_lines.replace("$ROTATION$", "%.1f" % event_options.get('rotation', 30.0))
+        fault_lines = fault_lines.replace("$AMPLITUDE$", "%.1f" % event_options.get('amplitude', 2000.0))
+        fault_lines = fault_lines.replace("$RADIUS$", "%.1f" % event_options.get('radius', 1000.0))
+        fault_lines = fault_lines.replace("$XAXIS$", "%.1f" % event_options.get('xaxis', 2000.0))
+        fault_lines = fault_lines.replace("$YAXIS$", "%.1f" % event_options.get('yaxis', 2000.0))
+        fault_lines = fault_lines.replace("$ZAXIS$", "%.1f" % event_options.get('zaxis', 2000.0))
+        # $GEOMETRY$ Translation
+
+
+>>>>>>> refs/remotes/flohorovicic/master
         # now split lines and add as list entries to event lines
         # event lines are defined in list:
 
@@ -646,14 +824,65 @@ Version = 7.11
         ev.set_event_lines(tmp_lines_list)
         return ev
 
+<<<<<<< HEAD
     # AK 2014-10
+=======
+    def _create_fold(self, event_options):
+        """Create a fold event
+
+        **Arguments**:
+            - *event_options* = list : list of required and optional settings for event;
+            Options are:
+            'name' = string : name of fault event
+            'pos' = (x,y,z) : position of reference point (floats)
+                .. note::     for convenience, it is possible to assign 'top' to z
+                              for position at "surface"
+            'amplitude' = float : amplitude of fold
+            'wavelength' = float : wavelength of fold
+            'dip_dir' = float : dip (plane) direction (default: 90)
+            'dip' = float : fault (plane) dip (default: 90)
+        """
+        ev = events.Fault()
+        tmp_lines = [""]
+        fault_lines = _Templates.fold
+        # substitute text with according values
+        fault_lines = fault_lines.replace("$NAME$", event_options['name'])
+        fault_lines = fault_lines.replace("$POS_X$", "%.1f" % event_options['pos'][0])
+        fault_lines = fault_lines.replace("$POS_Y$", "%.1f" % event_options['pos'][1])
+        if event_options['pos'] == 'top':
+            # recalculate z-value to be at top of model
+            z = self.zmax
+            fault_lines = fault_lines.replace("$POS_Z$", "%.1f" % z)
+        else:
+            fault_lines = fault_lines.replace("$POS_Z$", "%.1f" % event_options['pos'][2])
+        fault_lines = fault_lines.replace("$WAVELENGTH$", "%.1f" % event_options['wavelength'])
+        fault_lines = fault_lines.replace("$AMPLITUDE$", "%.1f" % event_options['amplitude'])
+        # fault_lines = fault_lines.replace("$SLIP$", "%.1f" % event_options['slip'])
+        fault_lines = fault_lines.replace("$DIP_DIR$", "%.1f" % event_options.get('dip_dir', 90.0))
+        fault_lines = fault_lines.replace("$DIP$", "%.1f" % event_options.get('dip', 90.0))
+
+        # now split lines and add as list entries to event lines
+        # event lines are defined in list:
+
+        # split lines and add to event lines list:
+        for layer_line in fault_lines.split("\n"):
+            tmp_lines.append(layer_line)
+
+        tmp_lines_list = []
+        for line in tmp_lines:
+            tmp_lines_list.append(line + "\n")
+        ev.set_event_lines(tmp_lines_list)
+        return ev
+
+    # AK 2014-10    
+>>>>>>> refs/remotes/flohorovicic/master
     def _create_tilt(self, event_options):
         """Create a tilt event
 
         **Arguments**:
             - *event_options* = list : list of required and optional settings for event;
             Options are:
-            'name' = string : name of fault event
+            'name' = string : name of tilt event
             'pos' = (x,y,z) : position of reference point (floats)
                 .. note::     for convenience, it is possible to assign 'top' to z
                               for position at "surface"
@@ -691,10 +920,14 @@ Version = 7.11
         ev.set_event_lines(tmp_lines_list)
         return ev
 
+<<<<<<< HEAD
 
 
 
     # AK 2014-10
+=======
+    # AK 2014-10    
+>>>>>>> refs/remotes/flohorovicic/master
     def _create_unconformity(self, event_options):
         """Create a unconformity event
 
@@ -745,7 +978,11 @@ Version = 7.11
                 tmp_lines.append(layer_line)
 
         # append event name
+<<<<<<< HEAD
         tmp_lines.append("""\tName\t= Strat""")
+=======
+        tmp_lines.append("""\tName\t= %s""" % event_options.get('name', 'Unconf'))
+>>>>>>> refs/remotes/flohorovicic/master
 
         tmp_lines_list = []
         for line in tmp_lines:
@@ -760,11 +997,14 @@ Version = 7.11
             - *params_dict* = dictionary : entries to set (multiple) parameters
 
         """
-        for key,sub_dict in params_dict.items():
+        for key, sub_dict in params_dict.items():
             for sub_key, val in sub_dict.items():
                 self.events[key].properties[sub_key] = val
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/flohorovicic/master
     def change_event_params(self, changes_dict):
         """Change multiple event parameters according to settings in changes_dict
 
@@ -773,12 +1013,21 @@ Version = 7.11
 
         Per default, the values in the dictionary are added to the event parameters.
         """
+<<<<<<< HEAD
         #print changes_dict
         for key,sub_dict in changes_dict.items(): #loop through events (key)
             for sub_key, val in sub_dict.items(): #loop through parameters being changed (sub_key)
                 self.events[key].properties[sub_key] += val
 
     def get_event_params( self, event_number ):
+=======
+        # print changes_dict
+        for key, sub_dict in changes_dict.items():  # loop through events (key)
+            for sub_key, val in sub_dict.items():  # loop through parameters being changed (sub_key)
+                self.events[key].properties[sub_key] += val
+
+    def get_event_params(self, event_number):
+>>>>>>> refs/remotes/flohorovicic/master
         '''
         Returns the parameter dictionary for a given event.
 
@@ -790,7 +1039,11 @@ Version = 7.11
         '''
         return self.events[event_number].properties
 
+<<<<<<< HEAD
     def get_event_param( self, event_number, name ):
+=======
+    def get_event_param(self, event_number, name):
+>>>>>>> refs/remotes/flohorovicic/master
         '''
         Returns the value of a given parameter for a given event.
 
@@ -806,7 +1059,11 @@ Version = 7.11
             ev = self.events[event_number].properties
             return ev[name]
         except KeyError:
+<<<<<<< HEAD
             return None #property does not exist
+=======
+            return None  # property does not exist
+>>>>>>> refs/remotes/flohorovicic/master
 
     def write_history(self, filename):
         """Write history to new file
@@ -840,7 +1097,7 @@ Version = 7.11
                 history_lines.append(line)
 
         # add footer: from original footer or from template (if new file):
-        if not hasattr(self,"footer_lines"):
+        if not hasattr(self, "footer_lines"):
             self.create_footer_from_template()
 
         # add footer
@@ -848,8 +1105,9 @@ Version = 7.11
             history_lines.append(line)
 
         f = open(filename, 'w')
-        for i,line in enumerate(history_lines):
+        for i, line in enumerate(history_lines):
             # add empty line before "BlockOptions", if not there:
+<<<<<<< HEAD
             if ('BlockOptions' in line) and (self.history_lines[i-1] != "\n"):
                 f.write("\n")
             f.write(line)
@@ -857,16 +1115,31 @@ Version = 7.11
 
 
 #===============================================================================
+=======
+            if ('BlockOptions' in line) and (history_lines[i - 1] != "\n"):
+                f.write("\n")
+
+            # write line
+            f.write(line)
+
+        f.close()
+
+
+# ===============================================================================
+>>>>>>> refs/remotes/flohorovicic/master
 # End of NoddyHistory
-#===============================================================================
+# ===============================================================================
 
 
-#===============================================================================
+# ===============================================================================
 # Templates for Noddy history file
-#===============================================================================
+# ===============================================================================
 
 class _Templates():
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/flohorovicic/master
     header = """#Filename = simple_two_faults.his
 #Date Saved = 24/3/2014 14:21:0
 FileType = 111
@@ -892,8 +1165,13 @@ Version = 7.11"""
     Green    = 153
     Blue    = 48 """
 
+<<<<<<< HEAD
     fault = """    Geometry    = Translation
     Movement    = Hanging Wall
+=======
+    fault = """    Geometry    = $GEOMETRY$
+    Movement    = $MOVEMENT$
+>>>>>>> refs/remotes/flohorovicic/master
     X    = $POS_X$
     Y    = $POS_Y$
     Z    =   $POS_Z$
@@ -901,12 +1179,12 @@ Version = 7.11"""
     Dip    =  $DIP$
     Pitch    =  90.00
     Slip    = $SLIP$
-    Rotation    =  30.00
-    Amplitude    = 2000.00
-    Radius    = 1000.00
-    XAxis    = 2000.00
-    YAxis    = 2000.00
-    ZAxis    = 2000.00
+    Rotation    = $ROTATION$
+    Amplitude    = $AMPLITUDE$
+    Radius    = $RADIUS$
+    XAxis    = $XAXIS$
+    YAxis    = $YAXIS$
+    ZAxis    = $ZAXIS$
     Cyl Index    =   0.00
     Profile Pitch    =  90.00
     Color Name    = Custom Colour 8
@@ -1191,6 +1469,96 @@ Version = 7.11"""
     Surface YDim    = 0.000000
     Surface ZDim    = 0.000000
     Name    = $NAME$"""
+
+    fold = """	Type	= Sine
+	Single Fold	= FALSE
+	X	=   $POS_X$
+	Y	=   $POS_Y$
+	Z	=   $POS_Z$
+	Dip Direction	=  $DIP_DIR$
+	Dip	=  $DIP$
+	Pitch	=   0.00
+	Wavelength	= $WAVELENGTH$
+	Amplitude	= $AMPLITUDE$
+	Cylindricity	=   0.00
+	Fourier Series
+		Term A 0	=   0.00
+		Term B 0	=   0.00
+		Term A 1	=   0.00
+		Term B 1	=   1.00
+		Term A 2	=   0.00
+		Term B 2	=   0.00
+		Term A 3	=   0.00
+		Term B 3	=   0.00
+		Term A 4	=   0.00
+		Term B 4	=   0.00
+		Term A 5	=   0.00
+		Term B 5	=   0.00
+		Term A 6	=   0.00
+		Term B 6	=   0.00
+		Term A 7	=   0.00
+		Term B 7	=   0.00
+		Term A 8	=   0.00
+		Term B 8	=   0.00
+		Term A 9	=   0.00
+		Term B 9	=   0.00
+		Term A 10	=   0.00
+		Term B 10	=   0.00
+	Name	= Fold Profile
+	Type	= 1
+	Join Type 	= LINES
+	Graph Length	= 200.000000
+	Min X	= 0.000000
+	Max X	= 6.280000
+	Min Y Scale	= -1.000000
+	Max Y Scale	= 1.000000
+	Scale Origin	= 0.000000
+	Min Y Replace	= -1.000000
+	Max Y Replace	= 1.000000
+	Num Points	= 21
+		Point X	= 0
+		Point Y	= 0
+		Point X	= 31
+		Point Y	= 30
+		Point X	= 62
+		Point Y	= 58
+		Point X	= 94
+		Point Y	= 80
+		Point X	= 125
+		Point Y	= 94
+		Point X	= 157
+		Point Y	= 99
+		Point X	= 188
+		Point Y	= 95
+		Point X	= 219
+		Point Y	= 81
+		Point X	= 251
+		Point Y	= 58
+		Point X	= 282
+		Point Y	= 31
+		Point X	= 314
+		Point Y	= 0
+		Point X	= 345
+		Point Y	= -31
+		Point X	= 376
+		Point Y	= -59
+		Point X	= 408
+		Point Y	= -81
+		Point X	= 439
+		Point Y	= -95
+		Point X	= 471
+		Point Y	= -100
+		Point X	= 502
+		Point Y	= -96
+		Point X	= 533
+		Point Y	= -82
+		Point X	= 565
+		Point Y	= -59
+		Point X	= 596
+		Point Y	= -32
+		Point X	= 628
+		Point Y	= -1
+	Name	= $NAME$"""
 
     # AK 2014-10
     tilt = """X    =   $POS_X$
@@ -1484,14 +1852,18 @@ Version = 7.11"""
 End of Status Report"""
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/flohorovicic/master
 if __name__ == '__main__':
     # some testing and debugging:
     import os
-    os.chdir(r'/Users/Florian/git/pynoddy/sandbox')
-    H1 = NoddyHistory("../examples/simple_two_faults.his")
+
+    os.chdir(r'C:\Users\Sam\OneDrive\Documents\Masters\Models\Mt Painter')
+    H1 = NoddyHistory("mt_pa_simplified.his")
     H1.swap_events(2, 3)
     H1.write_history("test")
     H2 = NoddyHistory("test")
-    H2.events[2].properties['Dip'] = 12
+    H2.events[10].properties['Radius'] = 2000
     H2.write_history("test2")

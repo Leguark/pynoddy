@@ -4,7 +4,8 @@ echo "Update elements for documentation"
 
 echo "Convert IPython notebooks to rst"
 
-python -m IPython nbconvert --to rst ./notebooks/*ipynb
+# /usr/local/bin/python -m IPython nbconvert --to rst ./notebooks/*ipynb
+/usr/local/bin/python -m IPython nbconvert --to rst ./*ipynb
 
 echo "Convert README.md to rst"
 
