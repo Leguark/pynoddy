@@ -32,11 +32,11 @@ class NoddyHistory(object):
         file is opened!
         """
 
-<<<<<<< HEAD
+HEAD
         vb = kwds.get('verbose',False)
-=======
+
         vb = kwds.get('verbose', False)
->>>>>>> refs/remotes/flohorovicic/master
+
 
         if history is None:
             if kwds.has_key("url"):
@@ -48,11 +48,11 @@ class NoddyHistory(object):
         else:
             # load existing history
             self.load_history(history)
-<<<<<<< HEAD
+  HEAD
             self.determine_events(verbose = vb)
-=======
+
             self.determine_events(verbose=vb)
->>>>>>> refs/remotes/flohorovicic/master
+
 
     def __repr__(self):
         """Print out model information"""
@@ -74,11 +74,11 @@ class NoddyHistory(object):
         """
         events_only = kwds.get("events_only", False)
 
-<<<<<<< HEAD
+
         os = ""
-=======
+
         local_os = ""
->>>>>>> refs/remotes/flohorovicic/master
+
 
         if not events_only:
             # First: check if all information available
@@ -92,7 +92,7 @@ class NoddyHistory(object):
         if self.n_events == 0:
             local_os += ("The model does not yet contain any events\n")
         else:
-<<<<<<< HEAD
+
             os +=("This model consists of %d events:\n" % self.n_events)
             for k,ev in self.events.items():
                 os +=("\t(%d) - %s\n" % (k,ev.event_type))
@@ -112,7 +112,7 @@ class NoddyHistory(object):
                                                                           self.origin_z))
 
             os +=("The cubesize for model export is: \n\t%d m\n" % self.cube_size)
-=======
+
             local_os += ("This model consists of %d events:\n" % self.n_events)
             for k, ev in self.events.items():
                 local_os += ("\t(%d) - %s\n" % (k, ev.event_type))
@@ -132,7 +132,7 @@ class NoddyHistory(object):
                                                                                        self.origin_z))
 
             local_os += ("The cubesize for model export is: \n\t%d m\n" % self.cube_size)
->>>>>>> refs/remotes/flohorovicic/master
+
             # and now some metadata
             local_os += ("\n\n")
             local_os += (60 * "*" + "\n\t\t\tMeta Data\n" + 60 * "*")
@@ -142,11 +142,11 @@ class NoddyHistory(object):
 
         return local_os
 
-<<<<<<< HEAD
+
         return os
 
-=======
->>>>>>> refs/remotes/flohorovicic/master
+
+
     def get_origin(self):
         """Get coordinates of model origin and return and store in local variables
 
@@ -164,11 +164,11 @@ class NoddyHistory(object):
                 self.origin_z = float(self.footer_lines[i + 2].split("=")[1])
                 break
 
-<<<<<<< HEAD
+
         return(self.origin_x, self.origin_y, self.origin_z)
-=======
+
         return (self.origin_x, self.origin_y, self.origin_z)
->>>>>>> refs/remotes/flohorovicic/master
+
 
     def set_origin(self, origin_x, origin_y, origin_z):
         """Set coordinates of model origin and update local variables
@@ -190,11 +190,11 @@ class NoddyHistory(object):
         origin_y_line = "    Origin Y    =   %.2f\n" % origin_y
         origin_z_line = "    Origin Z    =   %.2f\n" % origin_z
 
-<<<<<<< HEAD
+
         for i,line in enumerate(self.footer_lines):
-=======
+
         for i, line in enumerate(self.footer_lines):
->>>>>>> refs/remotes/flohorovicic/master
+
             if "Origin X" in line:
                 self.footer_lines[i] = origin_x_line
                 self.footer_lines[i + 1] = origin_y_line
@@ -218,11 +218,11 @@ class NoddyHistory(object):
                 self.extent_z = float(self.footer_lines[i + 2].split("=")[1])
                 break
 
-<<<<<<< HEAD
+
         return(self.extent_x, self.extent_y, self.extent_z)
-=======
+
         return (self.extent_x, self.extent_y, self.extent_z)
->>>>>>> refs/remotes/flohorovicic/master
+
 
     def set_extent(self, extent_x, extent_y, extent_z):
         """Set model extent and update local variables
@@ -244,11 +244,11 @@ class NoddyHistory(object):
         extent_y_line = "    Length Y    =   %.2f\n" % extent_y
         extent_z_line = "    Length Z    =   %.2f\n" % extent_z
 
-<<<<<<< HEAD
+
         for i,line in enumerate(self.footer_lines):
-=======
+
         for i, line in enumerate(self.footer_lines):
->>>>>>> refs/remotes/flohorovicic/master
+
             if "Length X" in line:
                 self.footer_lines[i] = extent_x_line
                 self.footer_lines[i + 1] = extent_y_line
@@ -303,14 +303,14 @@ class NoddyHistory(object):
         pynoddy.compute_model(tmp_his_file, tmp_out_file)
         # 5. open output
         tmp_out = pynoddy.output.NoddyOutput(tmp_out_file)
-<<<<<<< HEAD
+
         # 6.
         return tmp_out.block[0,0,:]
 
-=======
-        # 6. 
+
+        # 6.
         return tmp_out.block[0, 0, :]
->>>>>>> refs/remotes/flohorovicic/master
+
 
     def load_history(self, history):
         """Load Noddy history
@@ -329,13 +329,13 @@ class NoddyHistory(object):
 
         This method is useful to load a model from the Structural Geophysics
         Atlas on the pages of the Virtual Explorer.
-<<<<<<< HEAD
+
         See: http://virtualexplorer.com.au/special/noddyatlas/index.html
 
-=======
+
         See: http://tectonique.net/asg
-        
->>>>>>> refs/remotes/flohorovicic/master
+
+
         **Arguments**:
             - *url* : url of history file
         """
@@ -357,16 +357,16 @@ class NoddyHistory(object):
         for e in np.sort(self.events.keys()):
             if self.events[e].event_type == 'STRATIGRAPHY':
                 self.model_stratigraphy += self.events[e].layer_names
-<<<<<<< HEAD
 
-=======
+
+
             if self.events[e].event_type == 'UNCONFORMITY':
                 self.model_stratigraphy += self.events[e].layer_names
             if self.events[e].event_type == 'DYKE':
                 self.model_stratigraphy += self.events[e].name
             if self.events[e].event_type == 'PLUG':
                 self.model_stratigraphy += self.events[e].name
->>>>>>> refs/remotes/flohorovicic/master
+
 
     def determine_events(self, **kwds):
         """Determine events and save line numbers
@@ -379,25 +379,25 @@ class NoddyHistory(object):
            - verbose = True if this function is should write to the print bufffer, otherwise False. Default is False.
         """
 
-<<<<<<< HEAD
+
         vb = kwds.get('verbose',True)
-=======
+
         vb = kwds.get('verbose', False)
->>>>>>> refs/remotes/flohorovicic/master
+
 
         self._raw_events = []
         for i, line in enumerate(self.history_lines):
             if "No of Events" in line:
                 self.n_events = int(line.split("=")[1])
             elif "Event #" in line:
-<<<<<<< HEAD
+
                 event = {}
                 event['type'] = line.split('=')[1].rstrip()
                 event['num'] = int(line[7:9])
                 event['line_start'] = i
-=======
+
                 event = {'type': line.split('=')[1].rstrip(), 'num': int(line[7:9]), 'line_start': i}
->>>>>>> refs/remotes/flohorovicic/master
+
                 self._raw_events.append(event)
             # finally: if the definition for BlockOptions starts, the event definition is over
             elif "BlockOptions" in line:
@@ -408,12 +408,12 @@ class NoddyHistory(object):
         # now adjust for last event
         self._raw_events[-1]['line_end'] = last_event_stop
 
-<<<<<<< HEAD
+
 
         self.events = {} # idea: create events as dictionary so that it is easier
-=======
+
         self.events = {}  # idea: create events as dictionary so that it is easier
->>>>>>> refs/remotes/flohorovicic/master
+
         # to swap order later!
         # now create proper event objects for these events
         if vb:
@@ -448,13 +448,13 @@ class NoddyHistory(object):
                 print "Warning: event of type %s has not been implemented in PyNoddy yet" % e['type']
                 continue
             # now set shared attributes (those defined in superclass Event)
-<<<<<<< HEAD
+
             order = e['num'] #retrieve event number
             self.events[order] = ev #store events sequentially
-=======
+
             order = e['num']  # retrieve event number
             self.events[order] = ev  # store events sequentially
->>>>>>> refs/remotes/flohorovicic/master
+
 
         # determine overall begin and end of the history events
         self.all_events_begin = self._raw_events[0]['line_start']
@@ -471,7 +471,7 @@ class NoddyHistory(object):
             -type: choose geology or geophysics cube size to return. Should be either 'Geology' (default) or 'Geophysics'
         """
 
-<<<<<<< HEAD
+
         #get args
         sim_type = kwds.get("type", 'Geology')
         cube_string = 'Geology Cube Size' #get geology cube size by default
@@ -479,7 +479,7 @@ class NoddyHistory(object):
             cube_string = 'Geophysics Cube Size' #instead get geophysics cube size
 
         # check if footer exists, if not: create from template
-=======
+
         # get args
         sim_type = kwds.get("type", 'Geophysics')  # everything seems to use this
         cube_string = 'Geophysics Cube Size'  # get geology cube size by default
@@ -488,7 +488,7 @@ class NoddyHistory(object):
             print "Warning: pynoddy uses the geophysics cube size for all calculations... changing the geology cube size will have no effect internally."
 
             # check if footer exists, if not: create from template
->>>>>>> refs/remotes/flohorovicic/master
+
         if not hasattr(self, "footer_lines"):
             self.create_footer_from_template()
 
@@ -517,36 +517,36 @@ class NoddyHistory(object):
         if not hasattr(self, "footer_lines"):
             self.create_footer_from_template()
 
-<<<<<<< HEAD
+
 #        lines_new = self.history_lines[:]
         for i,line in enumerate(self.footer_lines):
             if "Geophysics Cube Size" in line:  #correct line, make change
-=======
+
         #        lines_new = self.history_lines[:]
         for i, line in enumerate(self.footer_lines):
             if "Geophysics Cube Size" in line:  # correct line, make change
->>>>>>> refs/remotes/flohorovicic/master
+
                 l = line.split('=')
                 l_new = '%7.2f\r\n' % cube_size
                 line_new = l[0] + "=" + l_new
                 self.footer_lines[i] = line_new
 
-<<<<<<< HEAD
+
             if "Geology Cube Size" in line: #change geology cube size also
-=======
+
             if "Geology Cube Size" in line:  # change geology cube size also
->>>>>>> refs/remotes/flohorovicic/master
+
                 l = line.split('=')
                 l_new = '%7.2f\r\n' % cube_size
                 line_new = l[0] + "=" + l_new
                 self.footer_lines[i] = line_new
-<<<<<<< HEAD
+
         # assign changed lines back to object
 #        self.history_lines = lines_new[:]
-=======
+
                 # assign changed lines back to object
             #        self.history_lines = lines_new[:]
->>>>>>> refs/remotes/flohorovicic/master
+
 
     def get_footer_lines(self):
         """Get the footer lines from self.history_lines
@@ -602,18 +602,18 @@ class NoddyHistory(object):
         for event in self.events.values():
             event.update_properties()
 
-<<<<<<< HEAD
+
 #
 #class NewHistory():
 #    """Methods to create a Noddy model"""
 #
-=======
+
         #
         # class NewHistory():
         #    """Methods to create a Noddy model"""
         #
 
->>>>>>> refs/remotes/flohorovicic/master
+
     def create_new_history(self):
         """Methods to create a Noddy model
 
@@ -631,10 +631,10 @@ class NoddyHistory(object):
         self.event_counter += 1
         return self.event_counter
 
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/remotes/flohorovicic/master
+
+
+
     def add_event(self, event_type, event_options, **kwds):
         """Add an event type to history
 
@@ -646,12 +646,12 @@ class NoddyHistory(object):
             - *event_num* = int : event number (default: implicitly defined with increasing counter)
         """
 
-<<<<<<< HEAD
+
         event_num = 4 # kwds.get("event_num", self.get_ev_counter())
 
-=======
+
         event_num = kwds.get("event_num", self.get_ev_counter())
->>>>>>> refs/remotes/flohorovicic/master
+
 
         if event_type == 'stratigraphy':
             ev = self._create_stratigraphy(event_options)
@@ -665,12 +665,12 @@ class NoddyHistory(object):
             ev = self._create_tilt(event_options)
             ev.event_type = 'TILT'
 
-<<<<<<< HEAD
+
         elif event_type == 'unconformity': # AK
             ev = self._create_unconformity(event_options)
             ev.event_type = 'UNCONFORMITY'
 
-=======
+
         elif event_type == 'unconformity':  # AK
             ev = self._create_unconformity(event_options)
             ev.event_type = 'UNCONFORMITY'
@@ -679,7 +679,7 @@ class NoddyHistory(object):
             ev = self._create_fold(event_options)
             ev.event_type = 'FOLD'
 
->>>>>>> refs/remotes/flohorovicic/master
+
 
         else:
             raise NameError('Event type %s not (yet) implemented' % event_type)
@@ -697,11 +697,11 @@ class NoddyHistory(object):
 
     def _create_header(self):
         """Create model header, include actual date"""
-<<<<<<< HEAD
+
         t = time.localtime() # get current time
-=======
+
         t = time.localtime()  # get current time
->>>>>>> refs/remotes/flohorovicic/master
+
         time_string = "%d/%d/%d %d:%d:%d" % (t.tm_mday,
                                              t.tm_mon,
                                              t.tm_year,
@@ -715,12 +715,12 @@ Version = 7.11
 
 """
 
-<<<<<<< HEAD
+
     def _create_stratigraphy(self, event_options):
-=======
+
     @staticmethod
     def _create_stratigraphy(event_options):
->>>>>>> refs/remotes/flohorovicic/master
+
         """Create a stratigraphy event
 
         **Arguments**:
@@ -797,8 +797,8 @@ Version = 7.11
         fault_lines = fault_lines.replace("$DIP$", "%.1f" % event_options['dip'])
         fault_lines = fault_lines.replace("$SLIP$", "%.1f" % event_options['slip'])
 
-<<<<<<< HEAD
-=======
+
+
         fault_lines = fault_lines.replace("$MOVEMENT$", "%s" % event_options.get('movement', 'Hanging Wall'))
         fault_lines = fault_lines.replace("$GEOMETRY$", "%s" % event_options.get('geometry', 'Translation'))
         fault_lines = fault_lines.replace("$ROTATION$", "%.1f" % event_options.get('rotation', 30.0))
@@ -810,7 +810,7 @@ Version = 7.11
         # $GEOMETRY$ Translation
 
 
->>>>>>> refs/remotes/flohorovicic/master
+
         # now split lines and add as list entries to event lines
         # event lines are defined in list:
 
@@ -824,9 +824,9 @@ Version = 7.11
         ev.set_event_lines(tmp_lines_list)
         return ev
 
-<<<<<<< HEAD
+
     # AK 2014-10
-=======
+
     def _create_fold(self, event_options):
         """Create a fold event
 
@@ -874,8 +874,8 @@ Version = 7.11
         ev.set_event_lines(tmp_lines_list)
         return ev
 
-    # AK 2014-10    
->>>>>>> refs/remotes/flohorovicic/master
+    # AK 2014-10
+
     def _create_tilt(self, event_options):
         """Create a tilt event
 
@@ -920,14 +920,14 @@ Version = 7.11
         ev.set_event_lines(tmp_lines_list)
         return ev
 
-<<<<<<< HEAD
+
 
 
 
     # AK 2014-10
-=======
-    # AK 2014-10    
->>>>>>> refs/remotes/flohorovicic/master
+
+    # AK 2014-10
+
     def _create_unconformity(self, event_options):
         """Create a unconformity event
 
@@ -978,11 +978,11 @@ Version = 7.11
                 tmp_lines.append(layer_line)
 
         # append event name
-<<<<<<< HEAD
+
         tmp_lines.append("""\tName\t= Strat""")
-=======
+
         tmp_lines.append("""\tName\t= %s""" % event_options.get('name', 'Unconf'))
->>>>>>> refs/remotes/flohorovicic/master
+
 
         tmp_lines_list = []
         for line in tmp_lines:
@@ -1001,10 +1001,10 @@ Version = 7.11
             for sub_key, val in sub_dict.items():
                 self.events[key].properties[sub_key] = val
 
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/remotes/flohorovicic/master
+
+
+
     def change_event_params(self, changes_dict):
         """Change multiple event parameters according to settings in changes_dict
 
@@ -1013,21 +1013,21 @@ Version = 7.11
 
         Per default, the values in the dictionary are added to the event parameters.
         """
-<<<<<<< HEAD
+
         #print changes_dict
         for key,sub_dict in changes_dict.items(): #loop through events (key)
             for sub_key, val in sub_dict.items(): #loop through parameters being changed (sub_key)
                 self.events[key].properties[sub_key] += val
 
     def get_event_params( self, event_number ):
-=======
+
         # print changes_dict
         for key, sub_dict in changes_dict.items():  # loop through events (key)
             for sub_key, val in sub_dict.items():  # loop through parameters being changed (sub_key)
                 self.events[key].properties[sub_key] += val
 
     def get_event_params(self, event_number):
->>>>>>> refs/remotes/flohorovicic/master
+
         '''
         Returns the parameter dictionary for a given event.
 
@@ -1039,11 +1039,11 @@ Version = 7.11
         '''
         return self.events[event_number].properties
 
-<<<<<<< HEAD
+
     def get_event_param( self, event_number, name ):
-=======
+
     def get_event_param(self, event_number, name):
->>>>>>> refs/remotes/flohorovicic/master
+
         '''
         Returns the value of a given parameter for a given event.
 
@@ -1059,11 +1059,11 @@ Version = 7.11
             ev = self.events[event_number].properties
             return ev[name]
         except KeyError:
-<<<<<<< HEAD
+
             return None #property does not exist
-=======
+
             return None  # property does not exist
->>>>>>> refs/remotes/flohorovicic/master
+
 
     def write_history(self, filename):
         """Write history to new file
@@ -1107,15 +1107,15 @@ Version = 7.11
         f = open(filename, 'w')
         for i, line in enumerate(history_lines):
             # add empty line before "BlockOptions", if not there:
-<<<<<<< HEAD
+
             if ('BlockOptions' in line) and (self.history_lines[i-1] != "\n"):
                 f.write("\n")
             f.write(line)
         f.close()
 
 
-#===============================================================================
-=======
+#                                 ==
+
             if ('BlockOptions' in line) and (history_lines[i - 1] != "\n"):
                 f.write("\n")
 
@@ -1125,21 +1125,21 @@ Version = 7.11
         f.close()
 
 
-# ===============================================================================
->>>>>>> refs/remotes/flohorovicic/master
+#                                  ==
+
 # End of NoddyHistory
-# ===============================================================================
+#                                  ==
 
 
-# ===============================================================================
+#                                  ==
 # Templates for Noddy history file
-# ===============================================================================
+#                                  ==
 
 class _Templates():
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/remotes/flohorovicic/master
+
+
+
     header = """#Filename = simple_two_faults.his
 #Date Saved = 24/3/2014 14:21:0
 FileType = 111
@@ -1165,13 +1165,13 @@ Version = 7.11"""
     Green    = 153
     Blue    = 48 """
 
-<<<<<<< HEAD
+
     fault = """    Geometry    = Translation
     Movement    = Hanging Wall
-=======
+
     fault = """    Geometry    = $GEOMETRY$
     Movement    = $MOVEMENT$
->>>>>>> refs/remotes/flohorovicic/master
+
     X    = $POS_X$
     Y    = $POS_Y$
     Z    =   $POS_Z$
@@ -1852,10 +1852,10 @@ Version = 7.11"""
 End of Status Report"""
 
 
-<<<<<<< HEAD
 
-=======
->>>>>>> refs/remotes/flohorovicic/master
+
+
+
 if __name__ == '__main__':
     # some testing and debugging:
     import os

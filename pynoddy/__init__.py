@@ -2,7 +2,7 @@
 import os.path
 import subprocess
 
-<<<<<<< HEAD
+
 # Import additional modules of pynoddy
 from . import history
 from history import NoddyHistory
@@ -160,7 +160,7 @@ def compute_topology(rootname, **kwds):
 
 def compute_topology(rootname, **kwds):
     """Call the topology executable to compute a models topology.
-    
+
 >>>>>>> refs/remotes/flohorovicic/master
     **Arguments**:
         - *rootname* = string : rootname of the noddy model to calculate topology for
